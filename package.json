@@ -1,0 +1,32 @@
+{
+  "name": "ts-utils",
+  "version": "1.0.0",
+  "description": "Shared TypeScript utilities",
+  "module": "./index.js",
+  "types": "./index.d.ts",
+  "scripts": {
+    "test": "mocha -r ts-node/register src/**/*.spec.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ai-labs-team/ts-utils.git"
+  },
+  "author": "Nate Abele <natea@advisorinnovationlabs.com>",
+  "license": "UNLICENSED",
+  "bugs": {
+    "url": "https://github.com/ai-labs-team/ts-utils/issues"
+  },
+  "homepage": "https://github.com/ai-labs-team/ts-utils#readme",
+  "dependencies": {
+    "ramda": "^0.26.1"
+  },
+  "devDependencies": {
+    "@types/chai": "^4.2.0",
+    "@types/mocha": "^5.2.7",
+    "@types/ramda": "^0.26.19",
+    "chai": "^4.2.0",
+    "mocha": "^6.2.0",
+    "ts-node": "^8.3.0",
+    "typescript": "^3.5.3"
+  }
+}
