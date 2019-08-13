@@ -1,6 +1,6 @@
 import Maybe from './maybe';
 
-const handleErr = <Val>(errFn: (e: Error) => Val, fn: () => Val): Val => {
+const handleErr = <Err, Val>(errFn: (e: Err) => Val, fn: () => Val): Val => {
   try {
     return fn();
   } catch (e) {
@@ -75,6 +75,12 @@ export default class Result<Err, Val> {
     return this.isError()
       ? this as unknown as Result<Err, NewVal>
       : handleErr(Result.err, () => Result.ok(fn(this.val))) as Result<Error, NewVal>;
+  }
+
+  public mapError<NewErr>(fn: (err: Err) => NewErr): Result<NewErr, Val> {
+    return this.isError()
+      ? Result.err(fn(this.error()!))
+      : this as unknown as Result<NewErr, Val>;
   }
 
   public fold<NewVal>(errFn: (err: Err) => NewVal, fn: (val: Val) => NewVal): NewVal {
