@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import 'mocha';
 
-import Decoder, { DecodeError } from './decoder';
+import Decoder, { DecodeError, Index, TypedObject, ObjectKey } from './decoder';
 import Result from './result';
 import Maybe from './maybe';
 
@@ -25,7 +25,7 @@ describe('Decoder', () => {
     });
 
     it('fails if an individual element fails', () => {
-      expect(array(number).decode([1, 2, '3'])).to.deep.equal(Result.err(new DecodeError(Number, '3')));
+      expect(array(number).decode([1, 2, '3'])).to.deep.equal(Result.err(new DecodeError(Number, '3', new Index(2))));
     });
   });
 
@@ -44,16 +44,28 @@ describe('Decoder', () => {
         email: 'foo@bar',
         person: { firstName: 'Foo', lastName: 'Bar', age: 30 },
       };
-
       expect(userDecoder.decode(user)).to.deep.equal(Result.ok(user));
     });
 
     it('fails if any key fails', () => {
       const user = { person: { firstName: 'Foo', lastName: 'Bar', age: 30 } };
-      expect(userDecoder.decode(user)).to.deep.equal(Result.err(new DecodeError(String, undefined)));
 
+      expect(userDecoder.decode(user)).to.deep.equal(Result.err(new DecodeError(String, undefined, [
+        new TypedObject('User'),
+        new ObjectKey('email')
+      ])));
+    });
+
+    it('fails on nested key failure', () => {
       const user2 = { email: 'foo@bar', person: { firstName: 'Foo', lastName: 'Bar', age: '30' } };
-      expect(userDecoder.decode(user2)).to.deep.equal(Result.err(new DecodeError(Number, '30')));
+      expect(userDecoder.decode(user2)).to.deep.equal(
+        Result.err(new DecodeError(Number, '30', [
+          new TypedObject('User'),
+          new ObjectKey('person'),
+          new TypedObject('Person'),
+          new ObjectKey('age')
+        ]))
+      );
     });
   });
 
@@ -103,9 +115,43 @@ describe('Decoder', () => {
     });
 
     it('fails if all decoders fail', () => {
-      expect(oneOf<boolean | number>([bool, number]).decode('1138')).to.deep.equal(Result.err(
-        new DecodeError(Number, '1138')
-      ));
+      expect(oneOf<boolean | number>([bool, number]).decode('1138')).to.deep.equal(
+        Result.err(new DecodeError(Number, '1138'))
+      );
+    });
+  });
+
+  describe('errors', () => {
+    const thingDecoder = object('Things', { things: array(object('Thing', { id: number })) });
+
+    it('nest failure paths', () => {
+      expect(thingDecoder.decode({ things: [{ id: 123 }, { id: 456 }, { id: 'bad' }] })).to.deep.equal(
+        Result.err(new DecodeError(Number, 'bad', [
+          new TypedObject('Things'),
+          new ObjectKey('things'),
+          new Index(2),
+          new TypedObject('Thing'),
+          new ObjectKey('id'),
+        ]))
+      );
     });
   });
 });
+
+describe('DecodeError', () => {
+  describe('toString', () => {
+    it('handles nested paths', () => {
+      const err = new DecodeError(Number, 'bad', [
+        new TypedObject('Things'),
+        new ObjectKey('things'),
+        new Index(2),
+        new TypedObject('Thing'),
+        new ObjectKey('id'),
+      ]);
+
+      expect(err.toString()).to.equal(
+        'Decode Error: Expected Number, got `"bad"` in path Decoder.object(Things).things[2] > Decoder.object(Thing).id'
+      );
+    });
+  });
+})

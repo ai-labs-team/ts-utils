@@ -71,10 +71,10 @@ export default class Result<Err, Val> {
     return this.isError() ? fn() : this;
   }
 
-  public map<NewVal>(fn: (val: Val) => NewVal): Result<Err | Error, NewVal> {
+  public map<NewVal>(fn: (val: Val) => NewVal): Result<Err, NewVal> {
     return this.isError()
       ? this as unknown as Result<Err, NewVal>
-      : handleErr(Result.err, () => Result.ok(fn(this.val))) as Result<Error, NewVal>;
+      : handleErr(Result.err, () => Result.ok(fn(this.val))) as Result<Err, NewVal>;
   }
 
   public mapError<NewErr>(fn: (err: Err) => NewErr): Result<NewErr, Val> {
