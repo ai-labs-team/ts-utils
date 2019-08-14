@@ -119,7 +119,7 @@ export default class Decoder<Val> {
       : Result.err<DecodeError, Val[]>(new DecodeError(Array, json))
   ));
 
-  public static oneOf = <Val>(decoders: Decoder<Val>[]) => new Decoder<Val>((json: any) => (
+  public static oneOf = <Val>(decoders: Array<Decoder<Val>>) => new Decoder<Val>((json: any) => (
     decoders.reduce((result, decoder) => (
       result.isError()
         ? decoder.decode(json)
