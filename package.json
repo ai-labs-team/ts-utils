@@ -2,9 +2,10 @@
   "name": "ts-utils",
   "version": "1.0.0",
   "description": "Shared TypeScript utilities",
-  "module": "./index.js",
-  "types": "./index.d.ts",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "scripts": {
+    "build": "yarn test && tsc -p ./tsconfig.json && echo 'Built to ./dist'",
     "test": "mocha -r ts-node/register src/**/*.spec.ts"
   },
   "repository": {

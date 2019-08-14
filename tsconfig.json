@@ -3,7 +3,8 @@
     "./src/**/*.ts"
   ],
   "exclude": [
-    "./node_modules"
+    "./node_modules",
+    "./src/**/*.spec.ts"
   ],
   "compilerOptions": {
     /* Basic Options */
@@ -20,8 +21,8 @@
     "declarationMap": true, /* Generates a sourcemap for each corresponding '.d.ts' file. */
     "sourceMap": true, /* Generates corresponding '.map' file. */
     // "outFile": "./",                       /* Concatenate and emit output to single file. */
-    "outDir": "./src", /* Redirect output structure to the directory. */
-    "rootDir": "./", /* Specify the root directory of input files. Use to control the output directory structure with --outDir. */
+    "outDir": "./dist", /* Redirect output structure to the directory. */
+    "rootDir": "./src", /* Specify the root directory of input files. Use to control the output directory structure with --outDir. */
     // "composite": true,                     /* Enable project compilation */
     // "incremental": true,                   /* Enable incremental compilation */
     // "tsBuildInfoFile": "./",               /* Specify file to store incremental compilation information */
