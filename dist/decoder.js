@@ -88,6 +88,9 @@ var Decoder = /** @class */ (function () {
     function Decoder(decodeFn) {
         this.decodeFn = decodeFn;
     }
+    Decoder.decode = function (decoder) {
+        return function (val) { return decoder.decode(val); };
+    };
     Decoder.prototype.decode = function (val) {
         return this.decodeFn(val);
     };

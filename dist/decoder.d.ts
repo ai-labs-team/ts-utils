@@ -42,6 +42,7 @@ export default class Decoder<Val> {
     static array: <Val_1>(elementDecoder: Decoder<Val_1>) => Decoder<Val_1[]>;
     static oneOf: <Val_1>(decoders: Decoder<Val_1>[]) => Decoder<Val_1>;
     static object: <Val_1>(name: string, decoders: DecoderObject<Val_1>) => Decoder<Val_1>;
+    static decode<Val>(decoder: Decoder<Val>): (val: any) => Result<DecodeError, Val>;
     constructor(decodeFn: (json: any) => Result<DecodeError, Val>);
     decode(val: any): Result<DecodeError, Val>;
 }
