@@ -16,6 +16,10 @@ export default class Result<Err, Val> {
 
   public static map = <Err, Val, NewVal>(fn: (val: Val) => NewVal) => (result: Result<Err, Val>) => result.map(fn);
 
+  public static fold = <Err, Val, NewVal>(errFn: (err: Err) => NewVal, fn: (val: Val) => NewVal) => {
+    return (result: Result<Err, Val>) => result.fold(errFn, fn);
+  }
+
   public static value = <Err, Val>(result: Result<Err, Val>) => result.value();
 
   public static defaultTo = <Err, Val>(val: Val) => (result: Result<Err, Val>) => result.defaultTo(val);

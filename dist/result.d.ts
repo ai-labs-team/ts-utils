@@ -2,6 +2,7 @@ import Maybe from './maybe';
 export default class Result<Err, Val> {
     static chain: <Err_1, Val_1, NewVal>(fn: (val: Val_1) => Result<Err_1, NewVal>) => (result: Result<Err_1, Val_1>) => Result<Err_1, NewVal>;
     static map: <Err_1, Val_1, NewVal>(fn: (val: Val_1) => NewVal) => (result: Result<Err_1, Val_1>) => Result<Err_1, NewVal>;
+    static fold: <Err_1, Val_1, NewVal>(errFn: (err: Err_1) => NewVal, fn: (val: Val_1) => NewVal) => (result: Result<Err_1, Val_1>) => NewVal;
     static value: <Err_1, Val_1>(result: Result<Err_1, Val_1>) => Val_1 | null;
     static defaultTo: <Err_1, Val_1>(val: Val_1) => (result: Result<Err_1, Val_1>) => Val_1;
     static isError: <Err_1, Val_1>(result: Result<Err_1, Val_1>) => boolean;

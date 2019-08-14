@@ -65,6 +65,9 @@ var Result = /** @class */ (function () {
     };
     Result.chain = function (fn) { return function (result) { return result.chain(fn); }; };
     Result.map = function (fn) { return function (result) { return result.map(fn); }; };
+    Result.fold = function (errFn, fn) {
+        return function (result) { return result.fold(errFn, fn); };
+    };
     Result.value = function (result) { return result.value(); };
     Result.defaultTo = function (val) { return function (result) { return result.defaultTo(val); }; };
     Result.isError = function (result) { return result.isError(); };
