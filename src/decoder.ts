@@ -143,6 +143,10 @@ export default class Decoder<Val> {
       ), Result.ok<DecodeError, Val>({} as Val)).mapError(DecodeError.nest(new TypedObject(name)))
   ));
 
+  static decode<Val>(decoder: Decoder<Val>): (val: any) => Result<DecodeError, Val> {
+    return (val: any) => decoder.decode(val);
+  }
+
   constructor(private decodeFn: (json: any) => Result<DecodeError, Val>) { }
 
   public decode(val: any): Result<DecodeError, Val> {
