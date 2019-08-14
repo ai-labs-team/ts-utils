@@ -103,12 +103,12 @@ const toDecodeResult = <Val>(worked: boolean, typeVal: Function | string, val: V
 
 export default class Decoder<Val> {
 
-  static string = new Decoder((json: any) => toDecodeResult<string>(typeof json === 'string', String, json));
-  static number = new Decoder((json: any) => toDecodeResult<number>(typeof json === 'number', Number, json));
-  static bool = new Decoder((json: any) => toDecodeResult<boolean>(typeof json === 'boolean', Boolean, json));
-  static nullable = nullable;
+  public static string = new Decoder((json: any) => toDecodeResult<string>(typeof json === 'string', String, json));
+  public static number = new Decoder((json: any) => toDecodeResult<number>(typeof json === 'number', Number, json));
+  public static bool = new Decoder((json: any) => toDecodeResult<boolean>(typeof json === 'boolean', Boolean, json));
+  public static nullable = nullable;
 
-  static array = <Val>(elementDecoder: Decoder<Val>) => new Decoder((json: any) => (
+  public static array = <Val>(elementDecoder: Decoder<Val>) => new Decoder((json: any) => (
     Array.isArray(json)
       ? (json as any[]).reduce((prev: Result<DecodeError, Val[]>, current: any, index: number) => (
         elementDecoder
@@ -119,7 +119,7 @@ export default class Decoder<Val> {
       : Result.err<DecodeError, Val[]>(new DecodeError(Array, json))
   ));
 
-  static oneOf = <Val>(decoders: Decoder<Val>[]) => new Decoder<Val>((json: any) => (
+  public static oneOf = <Val>(decoders: Decoder<Val>[]) => new Decoder<Val>((json: any) => (
     decoders.reduce((result, decoder) => (
       result.isError()
         ? decoder.decode(json)
@@ -127,7 +127,7 @@ export default class Decoder<Val> {
     ), Result.err(new DecodeError(`[OneOf ${decoders.length}]`, json))) as Result<DecodeError, Val>
   ));
 
-  static object = <Val>(
+  public static object = <Val>(
     name: string,
     decoders: DecoderObject<Val>,
   ) => new Decoder<Val>((json: any) => (
@@ -143,7 +143,7 @@ export default class Decoder<Val> {
       ), Result.ok<DecodeError, Val>({} as Val)).mapError(DecodeError.nest(new TypedObject(name)))
   ));
 
-  static decode<Val>(decoder: Decoder<Val>): (val: any) => Result<DecodeError, Val> {
+  public static decode<Val>(decoder: Decoder<Val>): (val: any) => Result<DecodeError, Val> {
     return (val: any) => decoder.decode(val);
   }
 
