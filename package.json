@@ -6,7 +6,7 @@
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
-    "build": "yarn test && tsc -p ./tsconfig.json && echo 'Built to ./dist'",
+    "build": "rm -rf ./dist && yarn test && tsc -p ./tsconfig.json && echo 'Built to ./dist'",
     "test": "mocha -r ts-node/register src/**/*.spec.ts"
   },
   "repository": {

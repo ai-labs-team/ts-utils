@@ -2,8 +2,6 @@ import Result from './result';
 
 const isDefined = (val: any) => val !== null && val !== undefined;
 
-const identity = <A>(a: A): A => a;
-
 const toArray = (val: any) => (
   Array.isArray(val)
     ? val

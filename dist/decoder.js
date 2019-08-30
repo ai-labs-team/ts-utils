@@ -5,7 +5,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 var result_1 = __importDefault(require("./result"));
 var isDefined = function (val) { return val !== null && val !== undefined; };
-var identity = function (a) { return a; };
 var toArray = function (val) { return (Array.isArray(val)
     ? val
     : isDefined(val)
