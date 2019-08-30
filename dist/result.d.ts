@@ -1,6 +1,7 @@
 import Maybe from './maybe';
 export default class Result<Err, Val> {
-    static chain: <Err_1, Val_1, NewVal>(fn: (val: Val_1) => Result<Err_1, NewVal>) => (result: Result<Err_1, Val_1>) => Result<Err_1, NewVal>;
+    static chain: <Err_1, Val_1, NewErr, NewVal>(fn: (val: Val_1) => Result<NewErr, NewVal>) => (result: Result<Err_1, Val_1>) => Result<Err_1 | NewErr, NewVal>;
+    static attempt: <In, Val_1>(fn: (x: In) => Val_1) => (x: In) => Result<Error, Val_1>;
     static map: <Err_1, Val_1, NewVal>(fn: (val: Val_1) => NewVal) => (result: Result<Err_1, Val_1>) => Result<Err_1, NewVal>;
     static fold: <Err_1, Val_1, NewVal>(errFn: (err: Err_1) => NewVal, fn: (val: Val_1) => NewVal) => (result: Result<Err_1, Val_1>) => NewVal;
     static value: <Err_1, Val_1>(result: Result<Err_1, Val_1>) => Val_1 | null;
@@ -16,7 +17,7 @@ export default class Result<Err, Val> {
     value(): Val | null;
     error(): Err | null;
     isError(): boolean;
-    chain<NewVal>(fn: (val: Val) => Result<Err, NewVal>): Result<Err, NewVal>;
+    chain<NewErr, NewVal>(fn: (val: Val) => Result<NewErr, NewVal>): Result<Err | NewErr, NewVal>;
     or(alt: Result<Err, Val>): Result<Err, Val>;
     orLazy(fn: () => Result<Err, Val>): Result<Err, Val>;
     map<NewVal>(fn: (val: Val) => NewVal): Result<Err, NewVal>;

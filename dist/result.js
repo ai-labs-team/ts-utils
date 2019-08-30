@@ -26,10 +26,10 @@ var Result = /** @class */ (function () {
         return result.toMaybe();
     };
     Result.prototype.value = function () {
-        return typeof this.val !== 'undefined' ? this.val : null;
+        return typeof this.val !== 'undefined' && this.val !== null ? this.val : null;
     };
     Result.prototype.error = function () {
-        return typeof this.err !== 'undefined' ? this.err : null;
+        return typeof this.err !== 'undefined' && this.err !== null ? this.err : null;
     };
     Result.prototype.isError = function () {
         return this.error() !== null;
@@ -64,6 +64,7 @@ var Result = /** @class */ (function () {
         return this.isError() ? maybe_1.default.empty : maybe_1.default.of(this.val);
     };
     Result.chain = function (fn) { return function (result) { return result.chain(fn); }; };
+    Result.attempt = function (fn) { return function (x) { return handleErr(Result.err, function () { return Result.ok(fn(x)); }); }; };
     Result.map = function (fn) { return function (result) { return result.map(fn); }; };
     Result.fold = function (errFn, fn) {
         return function (result) { return result.fold(errFn, fn); };
