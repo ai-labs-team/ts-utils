@@ -131,7 +131,7 @@ export const oneOf = <Val>(decoders: Array<Decoder<Val>>): Decoder<Val> => (json
   ) as Result<DecodeError, Val>
 );
 
-export const object = <Val, AltErr extends Error>(
+export const object = <Val, AltErr extends Error = never>(
   name: string,
   decoders: DecoderObject<Val, AltErr>,
 ): Decoder<Val> => (json: any) => (
@@ -143,7 +143,7 @@ export const object = <Val, AltErr extends Error>(
           .mapError(DecodeError.nest(new ObjectKey(key as string), json[key]))
           .map((val: any) => Object.assign(obj, { [key]: val }) as Val)
       ))
-    ), Result.ok<DecodeError, Val>({} as Val)).mapError(DecodeError.nest(new TypedObject(name), json))
+    ), Result.ok<DecodeError | AltErr, Val>({} as Val)).mapError(DecodeError.nest(new TypedObject(name), json))
 );
 
 /**

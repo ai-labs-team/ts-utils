@@ -40,18 +40,36 @@ describe('Decoder', () => {
       })
     });
 
+    const user = {
+      email: 'foo@bar',
+      person: { firstName: 'Foo', lastName: 'Bar', age: 30 },
+    };
+
     it('decodes by key', () => {
-      const user = {
-        email: 'foo@bar',
-        person: { firstName: 'Foo', lastName: 'Bar', age: 30 },
-      };
       expect(userDecoder(user)).to.deep.equal(Result.ok(user));
     });
 
-    it('fails if any key fails', () => {
-      const user = { person: { firstName: 'Foo', lastName: 'Bar', age: 30 } };
+    it('enforces that the structure matches the type', () => {
+      /**
+       * Note: This isn't directly testable, since types are verified at runtime.
+       */
+      type User2 = {
+        email: string;
+        person: { firstName: string, lastName: string, age: number };
+      };
 
-      expect(userDecoder(user)).to.deep.equal(Result.err(new DecodeError(String, undefined, [
+      const user2Decoder = object<User2>('User2', {
+        email: string,
+        person: object('Person', { firstName: string, lastName: string, age: number })
+      });
+
+      expect(user2Decoder(user)).to.deep.equal(Result.ok(user));
+    });
+
+    it('fails if any key fails', () => {
+      const user2 = { person: { firstName: 'Foo', lastName: 'Bar', age: 30 } };
+
+      expect(userDecoder(user2)).to.deep.equal(Result.err(new DecodeError(String, undefined, [
         new TypedObject('User'),
         new ObjectKey('email')
       ])));
@@ -161,7 +179,7 @@ describe('Decoder', () => {
       const isUrl = (val: string) => new URL(val) && val;
       const url = 'https://google.com/foo?bar';
 
-      const thingDecoder: Decoder<{ url: string }> = object('Thing', {
+      const thingDecoder = object<{ url: string }, Error>('Thing', {
         url: pipe(string, Result.chain(Result.attempt(isUrl)))
       });
 

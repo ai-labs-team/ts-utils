@@ -43,7 +43,7 @@ export declare const number: Decoder<number>;
 export declare const bool: Decoder<boolean>;
 export declare const array: <Val>(elementDecoder: Decoder<Val, never>) => (json: any) => Result<DecodeError, Val[]>;
 export declare const oneOf: <Val>(decoders: Decoder<Val, never>[]) => Decoder<Val, never>;
-export declare const object: <Val, AltErr extends Error>(name: string, decoders: DecoderObject<Val, AltErr>) => Decoder<Val, never>;
+export declare const object: <Val, AltErr extends Error = never>(name: string, decoders: DecoderObject<Val, AltErr>) => Decoder<Val, never>;
 /**
  * Decodes an arbitrary collection of key/value pairs. This is useful when
  * the structure or keys aren't known, and they'll be handled or sanitized
