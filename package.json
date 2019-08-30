@@ -29,6 +29,6 @@
     "chai": "^4.2.0",
     "mocha": "^6.2.0",
     "ts-node": "^8.3.0",
-    "typescript": "^3.5.3"
+    "typescript": "^3.7.0-dev.20190830"
   }
 }

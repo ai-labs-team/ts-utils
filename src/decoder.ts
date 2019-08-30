@@ -2,6 +2,8 @@ import Result from './result';
 
 const isDefined = (val: any) => val !== null && val !== undefined;
 
+const identity = <A>(a: A): A => a;
+
 const toArray = (val: any) => (
   Array.isArray(val)
     ? val
@@ -22,18 +24,18 @@ export function nullable<Val>(
   defaultVal?: Val,
   mapper?: (a: Val) => Val,
 ): Decoder<Val | null> {
-  return new Decoder((json: any) => (
+  return (json: any) => (
     (!isDefined(json) && isDefined(defaultVal))
       ? Result.ok<DecodeError, Val>(defaultVal! as Val)
       : (isDefined(json) && isDefined(mapper))
-        ? decoder.decode(json).map(mapper!)
+        ? decoder(json).map(mapper!)
         : isDefined(json)
-          ? decoder.decode(json)
+          ? decoder(json)
           : Result.ok<DecodeError, Val | null>(null)
-  ));
+  );
 }
 
-export type DecoderObject<Val> = { [Key in keyof Val]: Decoder<Val[Key]> };
+export type DecoderObject<Val, AltErr extends Error = never> = { [Key in keyof Val]: Decoder<Val[Key], AltErr> };
 
 type PathElement = TypedObject | Index | ObjectKey | Array<any>;
 
@@ -66,30 +68,37 @@ export class TypedObject {
 
 export class DecodeError {
 
-  public static nest(key: PathElement) {
-    return (err: DecodeError) => err.nest(key);
+  public static nest<AltErr extends Error>(key: PathElement, val: any) {
+    return (err: DecodeError | AltErr) => (err instanceof DecodeError ? err : new DecodeError(err, val)).nest(key);
   }
 
-  public expected!: Function | string;
+  public expected!: Error | Function | string;
   public val!: any;
   public key!: PathElement[];
 
-  constructor(expected: Function | string, val: any, key: PathElement | PathElement[] | null = null) {
+  constructor(expected: Error | Function | string, val: any, key: PathElement | PathElement[] | null = null) {
     Object.freeze(Object.assign(this, { expected, val, key: toArray(key) }));
   }
 
+  /**
+   * Allows 'nesting' of decode errors 
+   */
   nest(key: PathElement): DecodeError {
     return new DecodeError(this.expected, this.val, [key].concat(this.key));
   }
 
+  private errMsg(): string {
+    return (this.expected instanceof Error)
+      ? `[${this.expected.name}]: ${this.expected.message}`
+      : `Expected ${((this.expected as Function).name || this.expected)}, got \`${JSON.stringify(this.val)}\``;
+  }
+
   toString() {
     return [
-      'Decode Error: Expected ',
-      ((this.expected as Function).name || this.expected),
-      ', got',
-      (' `' + JSON.stringify(this.val) + '` '),
+      'Decode Error: ',
+      this.errMsg(),
       this.key.length
-        ? `in path ${this.key.map(k => k.toString()).join('').replace(/^\s*>\s+/, '')}`
+        ? ` in path ${this.key.map(k => k.toString()).join('').replace(/^\s*>\s+/, '')}`
         : ''
     ].join('');
   }
@@ -101,55 +110,59 @@ const toDecodeResult = <Val>(worked: boolean, typeVal: Function | string, val: V
     : Result.err<DecodeError, Val>(new DecodeError(typeVal, val, key))
 );
 
-export default class Decoder<Val> {
+export type Decoder<Val, AltErr extends Error = never> = (json: any) => Result<DecodeError | AltErr, Val>;
 
-  public static string = new Decoder((json: any) => toDecodeResult<string>(typeof json === 'string', String, json));
-  public static number = new Decoder((json: any) => toDecodeResult<number>(typeof json === 'number', Number, json));
-  public static bool = new Decoder((json: any) => toDecodeResult<boolean>(typeof json === 'boolean', Boolean, json));
-  public static nullable = nullable;
+export const string: Decoder<string> = (json: any) => toDecodeResult<string>(typeof json === 'string', String, json);
+export const number: Decoder<number> = (json: any) => toDecodeResult<number>(typeof json === 'number', Number, json);
+export const bool: Decoder<boolean> = (json: any) => toDecodeResult<boolean>(typeof json === 'boolean', Boolean, json);
 
-  public static array = <Val>(elementDecoder: Decoder<Val>) => new Decoder((json: any) => (
-    Array.isArray(json)
-      ? (json as any[]).reduce((prev: Result<DecodeError, Val[]>, current: any, index: number) => (
-        elementDecoder
-          .decode(current)
-          .mapError(DecodeError.nest(new Index(index)))
-          .chain((decoded: Val) => prev.map((list: Val[]) => list.concat([decoded])))
-      ), Result.ok<DecodeError, Val[]>([]))
-      : Result.err<DecodeError, Val[]>(new DecodeError(Array, json))
-  ));
+export const array = <Val>(elementDecoder: Decoder<Val>) => (json: any) => (
+  Array.isArray(json)
+    ? (json as any[]).reduce((prev: Result<DecodeError, Val[]>, current: any, index: number) => (
+      elementDecoder(current)
+        .mapError(DecodeError.nest(new Index(index), current))
+        .chain((decoded: Val) => prev.map((list: Val[]) => list.concat([decoded])))
+    ), Result.ok<DecodeError, Val[]>([]))
+    : Result.err<DecodeError, Val[]>(new DecodeError(Array, json))
+);
 
-  public static oneOf = <Val>(decoders: Array<Decoder<Val>>) => new Decoder<Val>((json: any) => (
-    decoders.reduce((result, decoder) => (
-      result.isError()
-        ? decoder.decode(json)
-        : result
-    ), Result.err(new DecodeError(`[OneOf ${decoders.length}]`, json))) as Result<DecodeError, Val>
-  ));
+export const oneOf = <Val>(decoders: Array<Decoder<Val>>): Decoder<Val> => (json: any) => (
+  decoders.reduce(
+    (result, decoder) => (result.isError() ? decoder(json) : result),
+    Result.err(new DecodeError(`[OneOf ${decoders.length}]`, json))
+  ) as Result<DecodeError, Val>
+);
 
-  public static object = <Val>(
-    name: string,
-    decoders: DecoderObject<Val>,
-  ) => new Decoder<Val>((json: any) => (
-    (json === null || typeof json !== 'object')
-      ? Result.err(new DecodeError(Object, json, new TypedObject(name)))
-      : (Object.keys(decoders) as Array<keyof Val>).reduce((acc, key) => (
-        acc.chain(obj => (
-          decoders[key]
-            .decode(json[key])
-            .mapError(DecodeError.nest(new ObjectKey(key as string)))
-            .map(val => Object.assign(obj, { [key]: val }) as Val)
-        ))
-      ), Result.ok<DecodeError, Val>({} as Val)).mapError(DecodeError.nest(new TypedObject(name)))
-  ));
+export const object = <Val, AltErr extends Error>(
+  name: string,
+  decoders: DecoderObject<Val, AltErr>,
+): Decoder<Val> => (json: any) => (
+  (json === null || typeof json !== 'object')
+    ? Result.err(new DecodeError(Object, json, new TypedObject(name)))
+    : (Object.keys(decoders) as Array<keyof Val>).reduce((acc, key) => (
+      acc.chain(obj => (
+        decoders[key](json[key])
+          .mapError(DecodeError.nest(new ObjectKey(key as string), json[key]))
+          .map((val: any) => Object.assign(obj, { [key]: val }) as Val)
+      ))
+    ), Result.ok<DecodeError, Val>({} as Val)).mapError(DecodeError.nest(new TypedObject(name), json))
+);
 
-  public static decode<Val>(decoder: Decoder<Val>): (val: any) => Result<DecodeError, Val> {
-    return (val: any) => decoder.decode(val);
-  }
-
-  constructor(private decodeFn: (json: any) => Result<DecodeError, Val>) { }
-
-  public decode(val: any): Result<DecodeError, Val> {
-    return this.decodeFn(val);
-  }
-}
+/**
+ * Decodes an arbitrary collection of key/value pairs. This is useful when
+ * the structure or keys aren't known, and they'll be handled or sanitized
+ * by code that allows safely handles more permissive inputs.
+ *
+ * In the general case, `object` should be used instead.
+ */
+export const dict = <Val>(valueDecoder: Decoder<Val>) => (json: any) => (
+  isDefined(json) && isDefined(json.constructor) && json.constructor === Object
+    ? Object.keys(json).reduce((acc, key: string) => (
+      acc.chain(obj => (
+        valueDecoder(json[key])
+          .mapError(DecodeError.nest(new ObjectKey(key as string), json[key]))
+          .map((val: Val) => Object.assign(obj, { [key]: val }))
+      ))
+    ), Result.ok<DecodeError, { [key: string]: Val }>({}))
+    : Result.err<DecodeError, { [key: string]: Val }>(new DecodeError(Object, json))
+);

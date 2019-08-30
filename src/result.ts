@@ -1,6 +1,6 @@
 import Maybe from './maybe';
 
-const handleErr = <Err, Val>(errFn: (e: Err) => Val, fn: () => Val): Val => {
+const handleErr = <Err, Val, A>(errFn: (e: Error) => Err, fn: () => Val): Err | Val => {
   try {
     return fn();
   } catch (e) {
@@ -10,9 +10,14 @@ const handleErr = <Err, Val>(errFn: (e: Err) => Val, fn: () => Val): Val => {
 
 export default class Result<Err, Val> {
 
-  public static chain = <Err, Val, NewVal>(
-    fn: (val: Val) => Result<Err, NewVal>
+  public static chain = <Err, Val, NewErr, NewVal>(
+    fn: (val: Val) => Result<NewErr, NewVal>
   ) => (result: Result<Err, Val>) => result.chain(fn);
+
+  public static attempt = <In, Val>(fn: (x: In) => Val) => (x: In) => handleErr(
+    Result.err,
+    () => Result.ok(fn(x))
+  ) as Result<Error, Val>;
 
   public static map = <Err, Val, NewVal>(fn: (val: Val) => NewVal) => (result: Result<Err, Val>) => result.map(fn);
 
@@ -52,18 +57,18 @@ export default class Result<Err, Val> {
   }
 
   public value(): Val | null {
-    return typeof this.val !== 'undefined' ? this.val : null;
+    return typeof this.val !== 'undefined' && this.val !== null ? this.val : null;
   }
 
   public error(): Err | null {
-    return typeof this.err !== 'undefined' ? this.err : null;
+    return typeof this.err !== 'undefined' && this.err !== null ? this.err : null;
   }
 
   public isError(): boolean {
     return this.error() !== null;
   }
 
-  public chain<NewVal>(fn: (val: Val) => Result<Err, NewVal>): Result<Err, NewVal> {
+  public chain<NewErr, NewVal>(fn: (val: Val) => Result<NewErr, NewVal>): Result<Err | NewErr, NewVal> {
     return this.isError() ? this as Result<Err, any> : fn(this.val);
   }
 

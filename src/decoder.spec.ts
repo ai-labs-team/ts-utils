@@ -1,31 +1,32 @@
 import { expect } from 'chai';
 import 'mocha';
 
-import Decoder, { DecodeError, Index, TypedObject, ObjectKey } from './decoder';
+import {
+  Decoder, DecodeError, Index, TypedObject, ObjectKey, number, string, array, oneOf, bool, object, nullable, dict
+} from './decoder';
 import Result from './result';
 import Maybe from './maybe';
-
-const { number, string, array, oneOf, bool, object, nullable } = Decoder
+import { pipe } from 'ramda';
 
 describe('Decoder', () => {
 
   describe('primitives', () => {
     it('decodes strings', () => {
-      expect(string.decode('Hello')).to.deep.equal(Result.ok('Hello'));
+      expect(string('Hello')).to.deep.equal(Result.ok('Hello'));
     });
 
     it('fail on invalid', () => {
-      expect(string.decode(123)).to.deep.equal(Result.err(new DecodeError(String, 123)));
+      expect(string(123)).to.deep.equal(Result.err(new DecodeError(String, 123)));
     });
   });
 
   describe('array', () => {
     it('decodes int arrays', () => {
-      expect(array(number).decode([1, 2, 3])).to.deep.equal(Result.ok([1, 2, 3]));
+      expect(array(number)([1, 2, 3])).to.deep.equal(Result.ok([1, 2, 3]));
     });
 
     it('fails if an individual element fails', () => {
-      expect(array(number).decode([1, 2, '3'])).to.deep.equal(Result.err(new DecodeError(Number, '3', new Index(2))));
+      expect(array(number)([1, 2, '3'])).to.deep.equal(Result.err(new DecodeError(Number, '3', new Index(2))));
     });
   });
 
@@ -44,13 +45,13 @@ describe('Decoder', () => {
         email: 'foo@bar',
         person: { firstName: 'Foo', lastName: 'Bar', age: 30 },
       };
-      expect(userDecoder.decode(user)).to.deep.equal(Result.ok(user));
+      expect(userDecoder(user)).to.deep.equal(Result.ok(user));
     });
 
     it('fails if any key fails', () => {
       const user = { person: { firstName: 'Foo', lastName: 'Bar', age: 30 } };
 
-      expect(userDecoder.decode(user)).to.deep.equal(Result.err(new DecodeError(String, undefined, [
+      expect(userDecoder(user)).to.deep.equal(Result.err(new DecodeError(String, undefined, [
         new TypedObject('User'),
         new ObjectKey('email')
       ])));
@@ -58,7 +59,7 @@ describe('Decoder', () => {
 
     it('fails on nested key failure', () => {
       const user2 = { email: 'foo@bar', person: { firstName: 'Foo', lastName: 'Bar', age: '30' } };
-      expect(userDecoder.decode(user2)).to.deep.equal(
+      expect(userDecoder(user2)).to.deep.equal(
         Result.err(new DecodeError(Number, '30', [
           new TypedObject('User'),
           new ObjectKey('person'),
@@ -71,25 +72,25 @@ describe('Decoder', () => {
 
   describe('nullability', () => {
     it('decodes to type or null', () => {
-      expect(nullable(string).decode(null)).to.deep.equal(Result.ok(null));
-      expect(nullable(string).decode('Hello')).to.deep.equal(Result.ok('Hello'));
+      expect(nullable(string)(null)).to.deep.equal(Result.ok(null));
+      expect(nullable(string)('Hello')).to.deep.equal(Result.ok('Hello'));
     });
 
     it('treats undefined as null', () => {
-      expect(nullable(string).decode(undefined)).to.deep.equal(Result.ok(null));
+      expect(nullable(string)(undefined)).to.deep.equal(Result.ok(null));
     });
 
     it('fails if underlying decoder fails', () => {
-      expect(nullable(string).decode(123)).to.deep.equal(Result.err(new DecodeError(String, 123)));
+      expect(nullable(string)(123)).to.deep.equal(Result.err(new DecodeError(String, 123)));
     });
 
     describe('with default', () => {
       it('returns if value is null', () => {
-        expect(nullable(string, 'default!').decode(null)).to.deep.equal(Result.ok('default!'));
+        expect(nullable(string, 'default!')(null)).to.deep.equal(Result.ok('default!'));
       });
 
       it('fails on non-null value of incorrect type', () => {
-        expect(nullable(string, 'default!').decode(123)).to.deep.equal(Result.err(
+        expect(nullable(string, 'default!')(123)).to.deep.equal(Result.err(
           new DecodeError(String, 123)
         ));
       });
@@ -99,24 +100,42 @@ describe('Decoder', () => {
       const decoder = nullable(string, Maybe.emptyOf<string>(), Maybe.of);
 
       it('maps success values', () => {
-        expect(decoder.decode('hello')).to.deep.equal(Result.ok(Maybe.of('hello')));
+        expect(decoder('hello')).to.deep.equal(Result.ok(Maybe.of('hello')));
       });
 
       it('ignores failed decodes', () => {
-        expect(decoder.decode(null)).to.deep.equal(Result.ok(Maybe.empty));
+        expect(decoder(null)).to.deep.equal(Result.ok(Maybe.empty));
       });
     });
   });
 
   describe('oneOf', () => {
     it('decodes if any decoder matches', () => {
-      expect(oneOf<string | number>([string, number]).decode(1138)).to.deep.equal(Result.ok(1138));
-      expect(oneOf<string | number>([string, number]).decode('1138')).to.deep.equal(Result.ok('1138'));
+      expect(oneOf<string | number>([string, number])(1138)).to.deep.equal(Result.ok(1138));
+      expect(oneOf<string | number>([string, number])('1138')).to.deep.equal(Result.ok('1138'));
     });
 
     it('fails if all decoders fail', () => {
-      expect(oneOf<boolean | number>([bool, number]).decode('1138')).to.deep.equal(
+      expect(oneOf<boolean | number>([bool, number])('1138')).to.deep.equal(
         Result.err(new DecodeError(Number, '1138'))
+      );
+    });
+  });
+
+  describe('dict', () => {
+    it('decodes arbitrary key/value pairs', () => {
+      expect(dict(bool)({ foo: true, bar: false })).to.deep.equal(Result.ok({ foo: true, bar: false }));
+
+      expect(dict(bool)({ foo: true, bar: 1 }).error()!.toString()).to.equal(
+        'Decode Error: Expected Boolean, got `1` in path .bar'
+      );
+
+      expect(dict(oneOf<string | number>([string, number]))({ one: '1', two: 2 })).to.deep.equal(
+        Result.ok({ one: '1', two: 2 })
+      );
+
+      expect(dict(oneOf<string | number>([string, number]))({ one: '1', two: false }).error()!.toString()).to.equal(
+        'Decode Error: Expected Number, got `false` in path .two'
       );
     });
   });
@@ -125,7 +144,7 @@ describe('Decoder', () => {
     const thingDecoder = object('Things', { things: array(object('Thing', { id: number })) });
 
     it('nest failure paths', () => {
-      expect(thingDecoder.decode({ things: [{ id: 123 }, { id: 456 }, { id: 'bad' }] })).to.deep.equal(
+      expect(thingDecoder({ things: [{ id: 123 }, { id: 456 }, { id: 'bad' }] })).to.deep.equal(
         Result.err(new DecodeError(Number, 'bad', [
           new TypedObject('Things'),
           new ObjectKey('things'),
@@ -136,22 +155,40 @@ describe('Decoder', () => {
       );
     });
   });
-});
 
-describe('DecodeError', () => {
-  describe('toString', () => {
-    it('handles nested paths', () => {
-      const err = new DecodeError(Number, 'bad', [
-        new TypedObject('Things'),
-        new ObjectKey('things'),
-        new Index(2),
-        new TypedObject('Thing'),
-        new ObjectKey('id'),
-      ]);
+  describe('composition', () => {
+    it('composes with other functions', () => {
+      const isUrl = (val: string) => new URL(val) && val;
+      const url = 'https://google.com/foo?bar';
 
-      expect(err.toString()).to.equal(
-        'Decode Error: Expected Number, got `"bad"` in path Decoder.object(Things).things[2] > Decoder.object(Thing).id'
+      const thingDecoder: Decoder<{ url: string }> = object('Thing', {
+        url: pipe(string, Result.chain(Result.attempt(isUrl)))
+      });
+
+      expect(thingDecoder({ url }).value()).to.deep.equal({ url });
+
+      expect(thingDecoder({ url: '/' }).error()!.toString()).to.equal(
+        'Decode Error: [TypeError [ERR_INVALID_URL]]: Invalid URL: / in path Decoder.object(Thing).url'
       );
     });
   });
+
+  describe('DecodeError', () => {
+    describe('toString', () => {
+      it('handles nested paths', () => {
+        const err = new DecodeError(Number, 'bad', [
+          new TypedObject('Things'),
+          new ObjectKey('things'),
+          new Index(2),
+          new TypedObject('Thing'),
+          new ObjectKey('id'),
+        ]);
+
+        expect(err.toString()).to.equal(
+          'Decode Error: Expected Number, got `"bad"` in path Decoder.object(Things).things[2] > Decoder.object(Thing).id'
+        );
+      });
+    });
+  });
+
 });
