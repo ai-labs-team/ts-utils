@@ -1,6 +1,10 @@
 import Maybe from './maybe';
 export default class Result<Err, Val> {
     static chain: <Err_1, Val_1, NewErr, NewVal>(fn: (val: Val_1) => Result<NewErr, NewVal>) => (result: Result<Err_1, Val_1>) => Result<Err_1 | NewErr, NewVal>;
+    /**
+     * Wraps a function that could throw an error, and returns a `Result` that either contains
+     * the return value of the function, or the error thrown.
+     */
     static attempt: <In, Val_1>(fn: (x: In) => Val_1) => (x: In) => Result<Error, Val_1>;
     static map: <Err_1, Val_1, NewVal>(fn: (val: Val_1) => NewVal) => (result: Result<Err_1, Val_1>) => Result<Err_1, NewVal>;
     static fold: <Err_1, Val_1, NewVal>(errFn: (err: Err_1) => NewVal, fn: (val: Val_1) => NewVal) => (result: Result<Err_1, Val_1>) => NewVal;

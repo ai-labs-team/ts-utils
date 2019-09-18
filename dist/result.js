@@ -64,6 +64,10 @@ var Result = /** @class */ (function () {
         return this.isError() ? maybe_1.default.empty : maybe_1.default.of(this.val);
     };
     Result.chain = function (fn) { return function (result) { return result.chain(fn); }; };
+    /**
+     * Wraps a function that could throw an error, and returns a `Result` that either contains
+     * the return value of the function, or the error thrown.
+     */
     Result.attempt = function (fn) { return function (x) { return handleErr(Result.err, function () { return Result.ok(fn(x)); }); }; };
     Result.map = function (fn) { return function (result) { return result.map(fn); }; };
     Result.fold = function (errFn, fn) {

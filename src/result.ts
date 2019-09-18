@@ -14,6 +14,10 @@ export default class Result<Err, Val> {
     fn: (val: Val) => Result<NewErr, NewVal>
   ) => (result: Result<Err, Val>) => result.chain(fn);
 
+  /**
+   * Wraps a function that could throw an error, and returns a `Result` that either contains
+   * the return value of the function, or the error thrown.
+   */
   public static attempt = <In, Val>(fn: (x: In) => Val) => (x: In) => handleErr(
     Result.err,
     () => Result.ok(fn(x))
