@@ -1,5 +1,5 @@
 {
-  "name": "ts-utils",
+  "name": "@ailabs/ts-utils",
   "version": "1.0.0",
   "description": "Shared TypeScript utilities",
   "main": "./dist/index.js",
@@ -14,7 +14,7 @@
     "url": "git+https://github.com/ai-labs-team/ts-utils.git"
   },
   "author": "Nate Abele <natea@advisorinnovationlabs.com>",
-  "license": "UNLICENSED",
+  "license": "Apache-2",
   "bugs": {
     "url": "https://github.com/ai-labs-team/ts-utils/issues"
   },
