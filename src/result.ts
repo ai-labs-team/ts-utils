@@ -1,6 +1,6 @@
 import Maybe from './maybe';
 
-const handleErr = <Err, Val, A>(errFn: (e: Error) => Err, fn: () => Val): Err | Val => {
+const handleErr = <Err, Val>(errFn: (e: Error) => Err, fn: () => Val): Err | Val => {
   try {
     return fn();
   } catch (e) {
