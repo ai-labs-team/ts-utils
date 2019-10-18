@@ -14,7 +14,7 @@
     "url": "git+https://github.com/ai-labs-team/ts-utils.git"
   },
   "author": "Nate Abele <natea@advisorinnovationlabs.com>",
-  "license": "Apache-2",
+  "license": "Apache-2.0",
   "bugs": {
     "url": "https://github.com/ai-labs-team/ts-utils/issues"
   },
@@ -25,10 +25,10 @@
   "devDependencies": {
     "@types/chai": "^4.2.0",
     "@types/mocha": "^5.2.7",
-    "@types/ramda": "^0.26.19",
+    "@types/ramda": "^0.26.33",
     "chai": "^4.2.0",
     "mocha": "^6.2.0",
     "ts-node": "^8.3.0",
-    "typescript": "^3.7.0-dev.20190830"
+    "typescript": "^3.7.0-dev.20191018"
   }
 }

@@ -12,12 +12,12 @@
   resolved "https://registry.yarnpkg.com/@types/mocha/-/mocha-5.2.7.tgz#315d570ccb56c53452ff8638738df60726d5b6ea"
   integrity sha512-NYrtPht0wGzhwe9+/idPaBB+TqkY9AhTvOLMkThm0IoEfLaiVQZwBwyJ5puCkO3AUCWrmcoePjp2mbFocKy4SQ==
 
-"@types/ramda@^0.26.19":
-  version "0.26.19"
-  resolved "https://registry.yarnpkg.com/@types/ramda/-/ramda-0.26.19.tgz#400580597566c016e9743f17c1c48bf4671cda81"
-  integrity sha512-lJuMZDXqZ8W2hl0Gz+wEPUhXcf/tZRuaO5vrxFD3Dv2XMqgTZVw+bvfS6iQAsio9XQV+uhkggtT4eLhDmUpI5g==
+"@types/ramda@^0.26.33":
+  version "0.26.33"
+  resolved "https://registry.yarnpkg.com/@types/ramda/-/ramda-0.26.33.tgz#5fd1f22381ccf913a3627beb16f468fb57f82d94"
+  integrity sha512-sUCQmKfAWmlbb6PpFqvndbGgTf0bCcmHLJqMYw8ErVS0UoZTTiz952aFedJhV+JERiVH7poh33358c7p0AAN8A==
   dependencies:
-    ts-toolbelt "^3.2.22"
+    ts-toolbelt "^4.7.7"
 
 ansi-colors@3.2.3:
   version "3.2.3"
@@ -797,20 +797,20 @@ ts-node@^8.3.0:
     source-map-support "^0.5.6"
     yn "^3.0.0"
 
-ts-toolbelt@^3.2.22:
-  version "3.2.23"
-  resolved "https://registry.yarnpkg.com/ts-toolbelt/-/ts-toolbelt-3.2.23.tgz#7b3ea621a7a58e0e4c1884b100695ca87189df38"
-  integrity sha512-WA0jP0SFchHWM+NrC2TaVC6AArt1/e01M7RddkiVyOpBtGvDVE7ZIZkUZ8Tpu2tB+zhAphToFdJhOry0p1lXbA==
+ts-toolbelt@^4.7.7:
+  version "4.8.19"
+  resolved "https://registry.yarnpkg.com/ts-toolbelt/-/ts-toolbelt-4.8.19.tgz#bf99490dacc1c941cd53be926aebcdd445dc329b"
+  integrity sha512-GSUJd/2qILuLTj/ekGHsiak3MkNjK2fX4baFI/9+7YDjQQM28ZzfOYJ4I7TeODdogK+MYPvhE46byO300FmPlA==
 
 type-detect@^4.0.0, type-detect@^4.0.5:
   version "4.0.8"
   resolved "https://registry.yarnpkg.com/type-detect/-/type-detect-4.0.8.tgz#7646fb5f18871cfbb7749e69bd39a6388eb7450c"
   integrity sha512-0fr/mIH1dlO+x7TlcMy+bIDqKPsw/70tVyeHW787goQjhmqaZe10uwLujubK9q9Lg6Fiho1KUKDYz0Z7k7g5/g==
 
-typescript@^3.7.0-dev.20190830:
-  version "3.7.0-dev.20190830"
-  resolved "https://registry.yarnpkg.com/typescript/-/typescript-3.7.0-dev.20190830.tgz#e9b96e0ca41a3bddff65171f663aab89903e1ace"
-  integrity sha512-ZxOCavgcCUgv8+VgHLjPL4Zv9U/rj2w30fdOdEhNkcqZft23Op64RiIzylOj3KMi4rPJuFyo02/+D2ym5yatdg==
+typescript@^3.7.0-dev.20191018:
+  version "3.7.0-dev.20191018"
+  resolved "https://registry.yarnpkg.com/typescript/-/typescript-3.7.0-dev.20191018.tgz#6b98a655b124ca697364e2d7977c469a2bfede3d"
+  integrity sha512-Z8KpsytbY5lBMp5cc08VFoO8CgHC6IcbgyiA5vjh7fitkoG0qcem9C354YuiWV4O2+i2gdC7vF8tNUYqO/vUkQ==
 
 which-module@^2.0.0:
   version "2.0.0"
