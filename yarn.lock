@@ -797,7 +797,7 @@ ts-node@^8.3.0:
     source-map-support "^0.5.6"
     yn "^3.0.0"
 
-ts-toolbelt@^4.7.7:
+ts-toolbelt@^4.7.7, ts-toolbelt@^4.8.19:
   version "4.8.19"
   resolved "https://registry.yarnpkg.com/ts-toolbelt/-/ts-toolbelt-4.8.19.tgz#bf99490dacc1c941cd53be926aebcdd445dc329b"
   integrity sha512-GSUJd/2qILuLTj/ekGHsiak3MkNjK2fX4baFI/9+7YDjQQM28ZzfOYJ4I7TeODdogK+MYPvhE46byO300FmPlA==
