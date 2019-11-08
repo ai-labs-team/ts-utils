@@ -7,7 +7,7 @@ export default class Maybe<T> {
     static or: import("ts-toolbelt/out/types/src/Function/Curry").Curry<(<T_1>(val: Maybe<T_1>, maybe: Maybe<T_1>) => Maybe<T_1>)>;
     static isNothing: <T_1>(maybe: Maybe<T_1>) => boolean;
     static value: <T_1>(maybe: Maybe<T_1>) => T_1 | null;
-    static of<T>(val: T): Maybe<T>;
+    static of<T>(val: T | null | undefined): Maybe<T>;
     /**
      * Converts a list of `Maybe` to a `Maybe` list, which is `Nothing` unless _all_
      * items in the list have a value.

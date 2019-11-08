@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import 'mocha';
 
 import {
-  Decoder, DecodeError, Index, TypedObject, ObjectKey, number, string, array, oneOf, bool, object, nullable, dict
+  Decoder, DecodeError, Index, TypedObject, ObjectKey, number, string, array, oneOf, bool, object, nullable, dict, DecoderObject
 } from './decoder';
 import Result from './result';
 import Maybe from './maybe';
@@ -180,7 +180,7 @@ describe('Decoder', () => {
       const url = 'https://google.com/foo?bar';
 
       const thingDecoder = object('Thing', {
-        url: pipe(string, Result.chain(Result.attempt(isUrl)))
+        url: pipe(string, Result.chain<DecodeError<never>, string, Error, string>(Result.attempt(isUrl))) as Decoder<string, DecodeError>
       });
 
       expect(thingDecoder({ url }).value()).to.deep.equal({ url });

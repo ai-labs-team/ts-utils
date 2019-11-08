@@ -1,6 +1,6 @@
 import Maybe from './maybe';
 export default class Result<Err, Val> {
-    static chain: <Err_1, Val_1, NewErr, NewVal>(fn: (val: Val_1) => Result<NewErr, NewVal>) => (result: Result<Err_1, Val_1>) => Result<Err_1 | NewErr, NewVal>;
+    static chain: <Err_1, Val_1, NewErr, NewVal>(fn: (val: Val_1) => Result<Err_1 | NewErr, NewVal>) => (result: Result<Err_1, Val_1>) => Result<Err_1 | NewErr, NewVal>;
     /**
      * Wraps a function that could throw an error, and returns a `Result` that either contains
      * the return value of the function, or the error thrown.

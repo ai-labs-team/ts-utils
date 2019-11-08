@@ -4,6 +4,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 var result_1 = __importDefault(require("./result"));
+var defTag = Symbol.for('@ts-utils/decoder/def');
+var tag = function (ctor, val, fn) {
+    var _a;
+    return (Object.assign(fn, (_a = {}, _a[defTag] = [ctor, val], _a)));
+};
+var def = function (fn) { return (fn[defTag] || null); };
 var isDefined = function (val) { return val !== null && val !== undefined; };
 var toArray = function (val) { return (Array.isArray(val)
     ? val

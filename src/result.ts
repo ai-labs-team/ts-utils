@@ -11,7 +11,7 @@ const handleErr = <Err, Val>(errFn: (e: Error) => Err, fn: () => Val): Err | Val
 export default class Result<Err, Val> {
 
   public static chain = <Err, Val, NewErr, NewVal>(
-    fn: (val: Val) => Result<NewErr, NewVal>
+    fn: (val: Val) => Result<Err | NewErr, NewVal>
   ) => (result: Result<Err, Val>) => result.chain(fn);
 
   /**
