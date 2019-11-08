@@ -58,7 +58,7 @@ describe('Decoder', () => {
         person: { firstName: string, lastName: string, age: number };
       };
 
-      const user2Decoder = object<User2>('User2', {
+      const user2Decoder = object<User2, Error>('User2', {
         email: string,
         person: object('Person', { firstName: string, lastName: string, age: number })
       });

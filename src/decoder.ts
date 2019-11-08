@@ -3,10 +3,8 @@ import { Decoder } from '.';
 
 const defTag = Symbol.for('@ts-utils/decoder/def');
 
-const log = (msg: string) => (val: any) => { console.log(msg, val); return val; };
-
 const tag = <Fn extends (...args: any[]) => any>(ctor: any, val: any, fn: Fn): typeof fn => (
-  Object.assign(fn, { [defTag]: [log('CTOR')(ctor), val] })
+  Object.assign(fn, { [defTag]: [ctor, val] })
 );
 
 const def = <Val>(
@@ -48,7 +46,7 @@ export function nullable<Val>(
   defaultVal?: Val,
   mapper?: (a: Val) => Val,
 ): Decoder<Val | null, never> {
-  return tag(nullable, decoder, (json: any) => (
+  return (json: any) => (
     (!isDefined(json) && isDefined(defaultVal))
       ? Result.ok<DecodeError, Val>(defaultVal! as Val)
       : (isDefined(json) && isDefined(mapper))
@@ -56,7 +54,7 @@ export function nullable<Val>(
         : isDefined(json)
           ? decoder(json)
           : Result.ok<DecodeError, Val | null>(null)
-  ));
+  );
 }
 
 export type DecoderObject<Val, AltErr extends Error> = { [Key in keyof Val]: Decoder<Val[Key], AltErr> };
@@ -151,17 +149,17 @@ export const array = <Val>(elementDecoder: Decoder<Val, never>) => (json: any) =
     : Result.err<DecodeError, Val[]>(new DecodeError(Array, json))
 );
 
-export const oneOf = <Val>(decoders: Array<Decoder<Val, never>>): Decoder<Val, never> => tag(oneOf, decoders, (json: any) => (
+export const oneOf = <Val>(decoders: Array<Decoder<Val, never>>): Decoder<Val, never> => (json: any) => (
   decoders.reduce(
     (result, decoder) => (result.isError() ? decoder(json) : result),
     Result.err(new DecodeError(`[OneOf ${decoders.length}]`, json))
   ) as Result<DecodeError, Val>
-));
+);
 
 export const object = <Val, AltErr extends Error>(
   name: string,
   decoders: DecoderObject<Val, AltErr>,
-): Decoder<Val, AltErr> => tag(object, decoders, (json: any) => (
+): Decoder<Val, AltErr> => (json: any) => (
   (json === null || typeof json !== 'object')
     ? Result.err(new DecodeError(Object, json, new TypedObject(name)))
     : (Object.keys(decoders) as Array<keyof Val>).reduce((acc, key) => (
@@ -171,7 +169,7 @@ export const object = <Val, AltErr extends Error>(
           .map((val: any) => Object.assign(obj, { [key]: val }) as Val)
       ))
     ), Result.ok<DecodeError | AltErr, Val>({} as Val)).mapError(DecodeError.nest(new TypedObject(name), json))
-));
+);
 
 /**
  * Decodes an arbitrary collection of key/value pairs. This is useful when
@@ -180,7 +178,7 @@ export const object = <Val, AltErr extends Error>(
  *
  * In the general case, `object` should be used instead.
  */
-export const dict = <Val>(valueDecoder: Decoder<Val, never>) => tag(dict, valueDecoder, (json: any) => (
+export const dict = <Val>(valueDecoder: Decoder<Val, never>) => (json: any) => (
   isDefined(json) && isDefined(json.constructor) && json.constructor === Object
     ? Object.keys(json).reduce((acc, key: string) => (
       acc.chain(obj => (
@@ -190,4 +188,4 @@ export const dict = <Val>(valueDecoder: Decoder<Val, never>) => tag(dict, valueD
       ))
     ), Result.ok<DecodeError, { [key: string]: Val }>({}))
     : Result.err<DecodeError, { [key: string]: Val }>(new DecodeError(Object, json))
-));
+);
