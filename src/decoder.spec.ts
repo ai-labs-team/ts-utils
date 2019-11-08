@@ -180,7 +180,7 @@ describe('Decoder', () => {
       const url = 'https://google.com/foo?bar';
 
       const thingDecoder = object('Thing', {
-        url: pipe(string, Result.chain<DecodeError<never>, string, Error, string>(Result.attempt(isUrl))) as Decoder<string, DecodeError>
+        url: pipe(string, Result.chain<DecodeError<never>, string, Error, string>(Result.attempt(isUrl))) as Decoder<string, DecodeError<Error>>
       });
 
       expect(thingDecoder({ url }).value()).to.deep.equal({ url });
