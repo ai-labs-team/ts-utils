@@ -18,7 +18,7 @@ export default class Maybe<T> {
 
   public static value = <T>(maybe: Maybe<T>) => maybe.value();
 
-  public static of<T>(val: T): Maybe<T> {
+  public static of<T>(val: T | null | undefined): Maybe<T> {
     return new Maybe(val);
   }
 

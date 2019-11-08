@@ -179,7 +179,7 @@ describe('Decoder', () => {
       const isUrl = (val: string) => new URL(val) && val;
       const url = 'https://google.com/foo?bar';
 
-      const thingDecoder = object<{ url: string }, Error>('Thing', {
+      const thingDecoder = object('Thing', {
         url: pipe(string, Result.chain(Result.attempt(isUrl)))
       });
 

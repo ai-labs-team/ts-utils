@@ -1,4 +1,19 @@
 import Result from './result';
+import { Decoder } from '.';
+
+const defTag = Symbol.for('@ts-utils/decoder/def');
+
+const log = (msg: string) => (val: any) => { console.log(msg, val); return val; };
+
+const tag = <Fn extends (...args: any[]) => any>(ctor: any, val: any, fn: Fn): typeof fn => (
+  Object.assign(fn, { [defTag]: [log('CTOR')(ctor), val] })
+);
+
+const def = <Val>(
+  fn: Decoder<any, never> & { [defTag]: Decoder<Val, never> }
+): Decoder<Val, never> | null => (
+  fn[defTag] || null
+);
 
 const isDefined = (val: any) => val !== null && val !== undefined;
 
@@ -10,19 +25,30 @@ const toArray = (val: any) => (
       : []
 );
 
-export function nullable<Val>(decoder: Decoder<Val>): Decoder<Val | null>;
-export function nullable<Val>(decoder: Decoder<Val>, defaultVal: Val): Decoder<Val>;
+/**
+ * Generate a type definition from a decoder, i.e.:
+ * ```
+ * type MyType = Decoded<typeof myDecoder>;
+ * ```
+ */
+export type Decoded<Model, AltErr extends Error = never> = Model extends Decoder<infer Type, AltErr>
+  ? Type
+  : never;
+
+
+export function nullable<Val>(decoder: Decoder<Val, never>): Decoder<Val | null, never>;
+export function nullable<Val>(decoder: Decoder<Val, never>, defaultVal: Val): Decoder<Val, never>;
 export function nullable<Val, NewVal>(
-  decoder: Decoder<NewVal>,
+  decoder: Decoder<NewVal, never>,
   defaultVal: Val,
   mapper: (a: NewVal) => Val
-): Decoder<Val>;
+): Decoder<Val, never>;
 export function nullable<Val>(
-  decoder: Decoder<Val>,
+  decoder: Decoder<Val, never>,
   defaultVal?: Val,
   mapper?: (a: Val) => Val,
-): Decoder<Val | null> {
-  return (json: any) => (
+): Decoder<Val | null, never> {
+  return tag(nullable, decoder, (json: any) => (
     (!isDefined(json) && isDefined(defaultVal))
       ? Result.ok<DecodeError, Val>(defaultVal! as Val)
       : (isDefined(json) && isDefined(mapper))
@@ -30,10 +56,10 @@ export function nullable<Val>(
         : isDefined(json)
           ? decoder(json)
           : Result.ok<DecodeError, Val | null>(null)
-  );
+  ));
 }
 
-export type DecoderObject<Val, AltErr extends Error = never> = { [Key in keyof Val]: Decoder<Val[Key], AltErr> };
+export type DecoderObject<Val, AltErr extends Error> = { [Key in keyof Val]: Decoder<Val[Key], AltErr> };
 
 type PathElement = TypedObject | Index | ObjectKey | Array<any>;
 
@@ -64,7 +90,7 @@ export class TypedObject {
   }
 }
 
-export class DecodeError {
+export class DecodeError extends Error {
 
   public static nest<AltErr extends Error>(key: PathElement, val: any) {
     return (err: DecodeError | AltErr) => (err instanceof DecodeError ? err : new DecodeError(err, val)).nest(key);
@@ -75,6 +101,7 @@ export class DecodeError {
   public key!: PathElement[];
 
   constructor(expected: Error | Function | string, val: any, key: PathElement | PathElement[] | null = null) {
+    super(expected.toString());
     Object.freeze(Object.assign(this, { expected, val, key: toArray(key) }));
   }
 
@@ -108,13 +135,13 @@ const toDecodeResult = <Val>(worked: boolean, typeVal: Function | string, val: V
     : Result.err<DecodeError, Val>(new DecodeError(typeVal, val, key))
 );
 
-export type Decoder<Val, AltErr extends Error = never> = (json: any) => Result<DecodeError | AltErr, Val>;
+export type Decoder<Val, AltErr extends Error> = (json: any) => Result<DecodeError | AltErr, Val>;
 
-export const string: Decoder<string> = (json: any) => toDecodeResult<string>(typeof json === 'string', String, json);
-export const number: Decoder<number> = (json: any) => toDecodeResult<number>(typeof json === 'number', Number, json);
-export const bool: Decoder<boolean> = (json: any) => toDecodeResult<boolean>(typeof json === 'boolean', Boolean, json);
+export const string: Decoder<string, never> = (json: any) => toDecodeResult<string>(typeof json === 'string', String, json);
+export const number: Decoder<number, never> = (json: any) => toDecodeResult<number>(typeof json === 'number', Number, json);
+export const bool: Decoder<boolean, never> = (json: any) => toDecodeResult<boolean>(typeof json === 'boolean', Boolean, json);
 
-export const array = <Val>(elementDecoder: Decoder<Val>) => (json: any) => (
+export const array = <Val>(elementDecoder: Decoder<Val, never>) => (json: any) => (
   Array.isArray(json)
     ? (json as any[]).reduce((prev: Result<DecodeError, Val[]>, current: any, index: number) => (
       elementDecoder(current)
@@ -124,17 +151,17 @@ export const array = <Val>(elementDecoder: Decoder<Val>) => (json: any) => (
     : Result.err<DecodeError, Val[]>(new DecodeError(Array, json))
 );
 
-export const oneOf = <Val>(decoders: Array<Decoder<Val>>): Decoder<Val> => (json: any) => (
+export const oneOf = <Val>(decoders: Array<Decoder<Val, never>>): Decoder<Val, never> => tag(oneOf, decoders, (json: any) => (
   decoders.reduce(
     (result, decoder) => (result.isError() ? decoder(json) : result),
     Result.err(new DecodeError(`[OneOf ${decoders.length}]`, json))
   ) as Result<DecodeError, Val>
-);
+));
 
-export const object = <Val, AltErr extends Error = never>(
+export const object = <Val, AltErr extends Error>(
   name: string,
   decoders: DecoderObject<Val, AltErr>,
-): Decoder<Val> => (json: any) => (
+): Decoder<Val, AltErr> => tag(object, decoders, (json: any) => (
   (json === null || typeof json !== 'object')
     ? Result.err(new DecodeError(Object, json, new TypedObject(name)))
     : (Object.keys(decoders) as Array<keyof Val>).reduce((acc, key) => (
@@ -144,7 +171,7 @@ export const object = <Val, AltErr extends Error = never>(
           .map((val: any) => Object.assign(obj, { [key]: val }) as Val)
       ))
     ), Result.ok<DecodeError | AltErr, Val>({} as Val)).mapError(DecodeError.nest(new TypedObject(name), json))
-);
+));
 
 /**
  * Decodes an arbitrary collection of key/value pairs. This is useful when
@@ -153,7 +180,7 @@ export const object = <Val, AltErr extends Error = never>(
  *
  * In the general case, `object` should be used instead.
  */
-export const dict = <Val>(valueDecoder: Decoder<Val>) => (json: any) => (
+export const dict = <Val>(valueDecoder: Decoder<Val, never>) => tag(dict, valueDecoder, (json: any) => (
   isDefined(json) && isDefined(json.constructor) && json.constructor === Object
     ? Object.keys(json).reduce((acc, key: string) => (
       acc.chain(obj => (
@@ -163,4 +190,4 @@ export const dict = <Val>(valueDecoder: Decoder<Val>) => (json: any) => (
       ))
     ), Result.ok<DecodeError, { [key: string]: Val }>({}))
     : Result.err<DecodeError, { [key: string]: Val }>(new DecodeError(Object, json))
-);
+));
