@@ -1,10 +1,11 @@
 {
   "name": "@ailabs/ts-utils",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Shared TypeScript utilities",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "sideEffects": false,
   "scripts": {
     "build": "rm -rf ./dist && yarn test && tsc -p ./tsconfig.json && echo 'Built to ./dist'",
     "test": "mocha -r ts-node/register src/**/*.spec.ts"
