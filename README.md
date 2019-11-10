@@ -139,7 +139,7 @@ The `Decoder` module strives to facilitate the representation of any valid JSON 
 
 ```typescript
 import { pipe } from 'ramda';
-import Result from '@ailabs/ts-utils/dist/decoder';
+import Result from '@ailabs/ts-utils/dist/result';
 import {
   DecodeError, Decoded, object, string, parse,
   number, boolean, nullable, oneOf, array
