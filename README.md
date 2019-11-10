@@ -74,7 +74,7 @@ const user = object('User', {
   // ...
 });
 
-// The `User` type is now equivalent to the `User` type in the 
+// The `User` type is now equivalent to the `User` type in the original example
 type User = Decoded<typeof user>;
 ```
 
