@@ -1,6 +1,6 @@
 {
   "name": "@ailabs/ts-utils",
-  "version": "1.0.3",
+  "version": "1.1.0",
   "description": "Shared TypeScript utilities",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
@@ -30,6 +30,6 @@
     "chai": "^4.2.0",
     "mocha": "^6.2.0",
     "ts-node": "^8.3.0",
-    "typescript": "^3.7.0-dev.20191018"
+    "typescript": "3.7.2"
   }
 }

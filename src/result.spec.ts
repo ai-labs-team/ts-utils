@@ -22,5 +22,17 @@ describe('Result', () => {
       expect(Result.fromMaybe(err)(Maybe.empty)).to.deep.equal(Result.err(err));
     });
   });
+
+  describe('chain', () => {
+    it('unwraps results', () => {
+      expect(Result.ok(5).chain(val => Result.ok(val * 2))).to.deep.equal(Result.ok(10));
+    });
+
+    it('propagates errors', () => {
+      expect(Result.err<string, number>('Badness').chain(val => Result.ok(val * 2))).to.deep.equal(
+        Result.err('Badness')
+      );
+    });
+  });
 });
 

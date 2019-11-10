@@ -5,7 +5,7 @@ export default class Result<Err, Val> {
      * Wraps a function that could throw an error, and returns a `Result` that either contains
      * the return value of the function, or the error thrown.
      */
-    static attempt: <In, Val_1>(fn: (x: In) => Val_1) => (x: In) => Result<Error, Val_1>;
+    static attempt: <In, Out>(fn: (x: In) => Out) => (x: In) => Result<Error, Out>;
     static map: <Err_1, Val_1, NewVal>(fn: (val: Val_1) => NewVal) => (result: Result<Err_1, Val_1>) => Result<Err_1, NewVal>;
     static fold: <Err_1, Val_1, NewVal>(errFn: (err: Err_1) => NewVal, fn: (val: Val_1) => NewVal) => (result: Result<Err_1, Val_1>) => NewVal;
     static value: <Err_1, Val_1>(result: Result<Err_1, Val_1>) => Val_1 | null;

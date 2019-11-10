@@ -2,11 +2,21 @@ import { expect } from 'chai';
 import 'mocha';
 
 import {
-  Decoder, DecodeError, Index, TypedObject, ObjectKey, number, string, array, oneOf, bool, object, nullable, dict, DecoderObject
+  DecodeError, Index, TypedObject, ObjectKey, number, string, inList, boolean,
+  array, oneOf, bool, object, nullable, dict, parse, toEnum, and, Decoded
 } from './decoder';
+
 import Result from './result';
 import Maybe from './maybe';
 import { pipe } from 'ramda';
+
+const toDate = (val: string): Result<Error, Date> => (
+  isNaN(Date.parse(val))
+    ? Result.err(new Error('[Invalid date]'))
+    : Result.ok(new Date(val))
+);
+
+const isUrl = Result.attempt((val: string) => new URL(val) && val);
 
 describe('Decoder', () => {
 
@@ -52,6 +62,8 @@ describe('Decoder', () => {
     it('enforces that the structure matches the type', () => {
       /**
        * Note: This isn't directly testable, since types are verified at runtime.
+       *
+       * Basically it works if the test compiles.
        */
       type User2 = {
         email: string;
@@ -102,6 +114,10 @@ describe('Decoder', () => {
       expect(nullable(string)(123)).to.deep.equal(Result.err(new DecodeError(String, 123)));
     });
 
+    it('handles missing object keys', () => {
+      expect(object('Foo', { bar: nullable(string) })({})).to.deep.equal(Result.ok({ bar: null }));
+    });
+
     describe('with default', () => {
       it('returns if value is null', () => {
         expect(nullable(string, 'default!')(null)).to.deep.equal(Result.ok('default!'));
@@ -145,7 +161,7 @@ describe('Decoder', () => {
       expect(dict(bool)({ foo: true, bar: false })).to.deep.equal(Result.ok({ foo: true, bar: false }));
 
       expect(dict(bool)({ foo: true, bar: 1 }).error()!.toString()).to.equal(
-        'Decode Error: Expected Boolean, got `1` in path .bar'
+        'Decode Error: Expected Boolean, got `1` in path: .bar'
       );
 
       expect(dict(oneOf<string | number>([string, number]))({ one: '1', two: 2 })).to.deep.equal(
@@ -153,7 +169,7 @@ describe('Decoder', () => {
       );
 
       expect(dict(oneOf<string | number>([string, number]))({ one: '1', two: false }).error()!.toString()).to.equal(
-        'Decode Error: Expected Number, got `false` in path .two'
+        'Decode Error: Expected Number, got `false` in path: .two'
       );
     });
   });
@@ -176,17 +192,93 @@ describe('Decoder', () => {
 
   describe('composition', () => {
     it('composes with other functions', () => {
-      const isUrl = (val: string) => new URL(val) && val;
       const url = 'https://google.com/foo?bar';
 
       const thingDecoder = object('Thing', {
-        url: pipe(string, Result.chain<DecodeError<never>, string, Error, string>(Result.attempt(isUrl))) as Decoder<string, DecodeError<Error>>
+        url: pipe(string, parse(isUrl))
       });
 
       expect(thingDecoder({ url }).value()).to.deep.equal({ url });
 
       expect(thingDecoder({ url: '/' }).error()!.toString()).to.equal(
-        'Decode Error: [TypeError [ERR_INVALID_URL]]: Invalid URL: / in path Decoder.object(Thing).url'
+        `Decode Error: [TypeError [ERR_INVALID_URL]]: 'Invalid URL: /' in path: Decoder.object(Thing).url`
+      );
+    });
+
+    it('correctly infers composed types', () => {
+      const date = new Date();
+      date.setMilliseconds(0);
+      const thingDecoder = object('Thing', { date: pipe(string, parse(toDate)) });
+
+      expect(thingDecoder({ date: date.toString() })).to.deep.eq(Result.ok({ date }));
+
+      const result = thingDecoder({ date: 'foo' });
+
+      expect((result.error()!.expected as Error).message).to.equal('[Invalid date]');
+      expect(result.error()!.val).to.equal('foo');
+      expect(result.error()!.key).to.deep.equal([
+        new TypedObject('Thing'),
+        new ObjectKey('date'),
+      ]);
+    });
+  });
+
+  describe('toEnum', () => {
+    enum Opts {
+      One,
+      Two,
+      Three
+    };
+
+    enum StringOpts {
+      One = 'ONE',
+      Two = 'TWO',
+      Three = 'THREE',
+    };
+
+    it('matches enum options', () => {
+      expect(toEnum('Opts', Opts)(0)).to.deep.equal(Result.ok(Opts.One));
+    });
+
+    it('matches string options', () => {
+      expect(toEnum('StringOpts', StringOpts)('ONE')).to.deep.equal(Result.ok(StringOpts.One));
+    });
+
+    it('fails on out of range values', () => {
+      expect(toEnum('Opts', Opts)(3)).to.deep.equal(
+        Result.err(new DecodeError('Expected a value in enum `Opts`', 3))
+      );
+      expect(toEnum('StringOpts', StringOpts)('One')).to.deep.equal(
+        Result.err(new DecodeError('Expected a value in enum `StringOpts`', 'One'))
+      );
+    });
+  });
+
+  describe('and', () => {
+    const intersection = and(
+      object('Foo', { foo: string }),
+      object('Bar', { bar: string })
+    );
+
+    it('combines decoders', () => {
+      expect(intersection({ foo: '1', bar: '2' })).to.deep.equal(Result.ok({ foo: '1', bar: '2' }));
+    });
+
+    it('fails if either decoder fails', () => {
+      expect(intersection({ foo: '', bar: 2 })).to.deep.equal(
+        Result.err(new DecodeError(String, 2, [
+          new TypedObject('Bar'),
+          new ObjectKey('bar'),
+        ]))
+      );
+    });
+
+    it('fails if either decoder fails, 2', () => {
+      expect(intersection({ foo: null, bar: '2' })).to.deep.equal(
+        Result.err(new DecodeError(String, null, [
+          new TypedObject('Foo'),
+          new ObjectKey('foo'),
+        ]))
       );
     });
   });
@@ -203,10 +295,57 @@ describe('Decoder', () => {
         ]);
 
         expect(err.toString()).to.equal(
-          'Decode Error: Expected Number, got `"bad"` in path Decoder.object(Things).things[2] > Decoder.object(Thing).id'
+          'Decode Error: Expected Number, got `"bad"` in path: Decoder.object(Things).things[2] > Decoder.object(Thing).id'
         );
       });
     });
   });
 
+  /**
+   * Validates example from the documentation.
+   */
+  describe('Doc Example', () => {
+    it('works', () => {
+      type Person = Decoded<typeof person>;
+      type Task = Decoded<typeof task>;
+      type TaskList = Decoded<typeof tasks>;
+
+      const person = object('Person', {
+        name: string,
+        email: string,
+        avatarUrl: pipe(string, parse(isUrl))
+      });
+
+      const task = object('Task', {
+        id: number,
+        title: string,
+        completed: boolean,
+        dueDate: nullable(pipe(string, parse(toDate))),
+        owner: oneOf<string | Person, Error>([
+          pipe(string, parse(isUrl)),
+          person
+        ])
+      });
+
+      const tasks = array(task);
+
+      const data: any = [{
+        id: 1138,
+        title: 'Implement to-do example',
+        completed: true,
+        owner: {
+          name: 'Will',
+          email: 'will@gmail.com',
+          avatarUrl: 'invalid.url'
+        }
+      }];
+
+      const taskList: Result<DecodeError<Error>, TaskList> = tasks(data);
+
+      expect(taskList.error()!.toString()).to.equal([
+        `Decode Error: [TypeError [ERR_INVALID_URL]]: 'Invalid URL: invalid.url'`,
+        'in path: [0] > Decoder.object(Task).owner > Decoder.object(Person).avatarUrl'
+      ].join(' '))
+    });
+  });
 });

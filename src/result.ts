@@ -18,10 +18,10 @@ export default class Result<Err, Val> {
    * Wraps a function that could throw an error, and returns a `Result` that either contains
    * the return value of the function, or the error thrown.
    */
-  public static attempt = <In, Val>(fn: (x: In) => Val) => (x: In) => handleErr(
+  public static attempt = <In, Out>(fn: (x: In) => Out) => (x: In) => handleErr(
     Result.err,
     () => Result.ok(fn(x))
-  ) as Result<Error, Val>;
+  ) as Result<Error, Out>;
 
   public static map = <Err, Val, NewVal>(fn: (val: Val) => NewVal) => (result: Result<Err, Val>) => result.map(fn);
 
