@@ -146,7 +146,7 @@ import {
 } from '@ailabs/ts-utils/dist/decoder';
 
 /**
- * Utility function to converts a parseable string to a date, or
+ * Utility function to convert a parseable string to a date, or
  * else fail with an error.
  */
 const toDate = (val: string): Result<Error, Date> => (
@@ -156,7 +156,7 @@ const toDate = (val: string): Result<Error, Date> => (
 );
 
 /**
- * Utility function to validates that a string is a URL. The `URL`
+ * Utility function to validate that a string is a URL. The `URL`
  * constructor will throw an error if the parameter is not a valid URL, so
  * `Result.attempt()` is used trap the error and convert it to a failed
  * `Result` object.
@@ -220,4 +220,4 @@ console.log(taskList.error()!.toString());
 
 Decoders produce highly detailed errors, reporting the exact path of invalid data, as well as the value(s) that failed to decode.
 
-The structural information that errors are generated from are also exposed on `DecodeError` for consumption by other tools.
+The structural information that errors are generated from is also exposed on `DecodeError` for consumption by other tools.
