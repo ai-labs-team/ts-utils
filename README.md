@@ -7,6 +7,16 @@ A collection of TypeScript utility classes and functions for safe, principled da
  - Elm (particularly [`Json.Decode`](https://package.elm-lang.org/packages/elm/json/latest/Json-Decode))
  - [`ts.data.json`](https://github.com/joanllenas/ts.data.json)
 
+## Motivation
+
+This library is primarily oriented around safely consuming data from arbitrary sources within a TypeScript application. Existing libraries that solve this problem were found to be deficient in the following areas:
+
+ - **Extra book-keeping related to having to define both types _and_ decoders**: this library intends to be expressive enough to represent any expressable data shape, and allow types to be automatically derived.
+ - **Insufficient information related to failures**: other libraries generate error objects that can only be string-ified for a simple explanation of the failure; this library provides error objects that produce highly detailed descriptions of failures, and structured data that can be inspected, or consumed by other tools.
+ - **Lack of granular composability**: this library allows arbitrary parsing / validation logic to be granularly interwoven with decoders, and provides utilities to adapt existing code into decoder compositions (see: `Result.attempt()`).
+
+Other modules / types included in this package exist primarly to support safely decoding arbitrary data, but have been augmented with typical features found in other programming environments, to make them nice to use.
+
 ## Modules
 
 ### `Maybe`
