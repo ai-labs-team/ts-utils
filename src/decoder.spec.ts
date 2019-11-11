@@ -78,6 +78,14 @@ describe('Decoder', () => {
       expect(user2Decoder(user)).to.deep.equal(Result.ok(user));
     });
 
+    it('supports arbitrary `Result` functions', () => {
+      const any = object('Any', { foo: Result.ok });
+
+      expect(any({ foo: 'bar' })).to.deep.equal(Result.ok({ foo: 'bar' }));
+      expect(any({ foo: 1138 })).to.deep.equal(Result.ok({ foo: 1138 }));
+      expect(any({ foo: {} })).to.deep.equal(Result.ok({ foo: {} }));
+    });
+
     it('fails if any key fails', () => {
       const user2 = { person: { firstName: 'Foo', lastName: 'Bar', age: 30 } };
 
