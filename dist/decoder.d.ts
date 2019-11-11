@@ -72,7 +72,7 @@ export declare const array: <Val>(elementDecoder: ComposedDecoder<Val, never>) =
 /**
  * Tries each one of a list of decoders in order to find one that works, otherwise fails.
  */
-export declare const oneOf: <Val, AltErr = never>(decoders: ComposedDecoder<Val, AltErr>[]) => Decoder<Val, string>;
+export declare const oneOf: <Val, AltErr = never>(decoders: readonly ComposedDecoder<Val, AltErr>[]) => Decoder<Val, string>;
 export declare const object: <Val, AltErr>(name: string, decoders: DecoderObject<Val, AltErr>) => Decoder<Val, AltErr>;
 /**
  * Creates an intersection between two decoders. Equivalent to TypeScript's `&` operator.
@@ -96,6 +96,11 @@ export declare const and: <ValA, ErrA, ValB, ErrB>(a: ComposedDecoder<ValA, ErrA
 export declare const dict: <Val, AltErr extends any>(valueDecoder: ComposedDecoder<Val, AltErr>) => (json: any) => Result<DecodeError<never>, {
     [key: string]: Val;
 }>;
+/**
+ * Allows using a decoder wrapped in a function. Useful for recursive data
+ * structures.
+ */
+export declare const lazy: <Val, AltErr = never>(wrapped: () => ComposedDecoder<Val, AltErr>) => (json: any) => Result<AltErr | DecodeError<AltErr>, Val>;
 /**
  * Attempts to convert a raw JSON value to an enum type.
  */

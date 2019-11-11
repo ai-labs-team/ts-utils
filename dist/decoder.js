@@ -153,6 +153,11 @@ exports.dict = function (valueDecoder) { return function (json) { return (isDefi
     })); })); }, result_1.default.ok({}))
     : result_1.default.err(new DecodeError(Object, json))); }; };
 /**
+ * Allows using a decoder wrapped in a function. Useful for recursive data
+ * structures.
+ */
+exports.lazy = function (wrapped) { return function (json) { return (wrapped()(json)); }; };
+/**
  * Attempts to convert a raw JSON value to an enum type.
  */
 exports.toEnum = function (name, enumVal) { return (function (val) {
