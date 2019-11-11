@@ -170,7 +170,7 @@ export const array = <Val>(elementDecoder: ComposedDecoder<Val>) => (json: any) 
 /**
  * Tries each one of a list of decoders in order to find one that works, otherwise fails.
  */
-export const oneOf = <Val, AltErr = never>(decoders: Array<ComposedDecoder<Val, AltErr>>): Decoder<Val, string> => (json: any) => (
+export const oneOf = <Val, AltErr = never>(decoders: ReadonlyArray<ComposedDecoder<Val, AltErr>>): Decoder<Val, string> => (json: any) => (
   decoders.reduce(
     (result, decoder) => (result.isError() ? decoder(json) : result as Result<any, Val>),
     Result.err(new DecodeError(`[OneOf ${decoders.length}]`, json))
@@ -232,6 +232,14 @@ export const dict = <Val, AltErr extends any>(valueDecoder: ComposedDecoder<Val,
       ))
     ), Result.ok<DecodeError, { [key: string]: Val }>({}))
     : Result.err<DecodeError, { [key: string]: Val }>(new DecodeError(Object, json))
+);
+
+/**
+ * Allows using a decoder wrapped in a function. Useful for recursive data
+ * structures.
+ */
+export const lazy = <Val, AltErr = never>(wrapped: () => ComposedDecoder<Val, AltErr>) => (json: any) => (
+  wrapped()(json)
 );
 
 /**

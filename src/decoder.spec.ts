@@ -3,12 +3,12 @@ import 'mocha';
 
 import {
   DecodeError, Index, TypedObject, ObjectKey, number, string, inList, boolean,
-  array, oneOf, bool, object, nullable, dict, parse, toEnum, and, Decoded
+  array, oneOf, bool, object, nullable, dict, parse, toEnum, and, Decoded, lazy, Decoder
 } from './decoder';
 
 import Result from './result';
 import Maybe from './maybe';
-import { pipe } from 'ramda';
+import { over, lensPath, concat, pipe } from 'ramda';
 
 const toDate = (val: string): Result<Error, Date> => (
   isNaN(Date.parse(val))
@@ -254,6 +254,23 @@ describe('Decoder', () => {
     });
   });
 
+  describe('inList', () => {
+    const opts = ['one', 'two', 'three'] as const;
+    type Opts = typeof opts[number];
+    const decoder = pipe(string, Result.chain(inList<Opts>(opts)));
+
+    it('matches a value to a list entry', () => {
+      expect(decoder('one' as any)).to.deep.equal(Result.ok('one'));
+    });
+
+    it('fails if a value is out of range', () => {
+      expect(decoder('ONE')).to.deep.equal(Result.err(new DecodeError(
+        'Expected one of [one, two, three]',
+        'ONE',
+      )));
+    })
+  });
+
   describe('and', () => {
     const intersection = and(
       object('Foo', { foo: string }),
@@ -280,6 +297,66 @@ describe('Decoder', () => {
           new ObjectKey('foo'),
         ]))
       );
+    });
+  });
+
+  describe('lazy', () => {
+    type Node<A> = {
+      value: A,
+      children: Node<A>[];
+    };
+
+    const nodeTree: Decoder<Node<string>, never> = object('Node', {
+      value: string,
+      children: nullable(array(lazy(() => nodeTree)), [])
+    });
+
+    const json: any = {
+      value: 'root',
+      children: [
+        { value: '1' },
+        { value: '2', children: [{ value: '2.1' }, { value: '2.2' }] },
+        {
+          value: '3',
+          children: [
+            { value: '3.1', children: [] },
+            { value: '3.2', children: [{ value: '3.2.1' }] }
+          ]
+        }
+      ]
+    };
+
+    it('decodes recursive structures', () => {
+      expect(nodeTree(json)).to.deep.equal(Result.ok({
+        value: 'root',
+        children: [
+          { value: '1', children: [] },
+          { value: '2', children: [{ value: '2.1', children: [] }, { value: '2.2', children: [] }] },
+          {
+            value: '3',
+            children: [
+              { value: '3.1', children: [] },
+              { value: '3.2', children: [{ value: '3.2.1', children: [] }] }
+            ]
+          }
+        ]
+      }))
+    });
+
+    it('fails if any child fails', () => {
+      const newData = over(lensPath(['children', 1, 'children']), concat([{ children: [] }]));
+      const json2 = newData(json);
+
+      expect(nodeTree(json2)).to.deep.equal(Result.err(new DecodeError(String, undefined, [
+        new TypedObject('Node'),
+        new ObjectKey('children'),
+        new Index(1),
+        new TypedObject('Node'),
+        new ObjectKey('children'),
+        new Index(0),
+        new TypedObject('Node'),
+        new ObjectKey('value')
+      ])));
     });
   });
 
