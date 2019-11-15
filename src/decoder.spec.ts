@@ -306,6 +306,18 @@ describe('Decoder', () => {
         ]))
       );
     });
+
+    it('composes with unions', () => {
+      const bar = object('Bar', { bar: boolean })
+      const baz = object('Baz', { baz: boolean });
+      const comp = and(
+        object('Foo', { foo: string }),
+        oneOf<Decoded<typeof bar> | Decoded<typeof baz>>([bar, baz])
+      );
+
+      expect(comp({ foo: '!', bar: true })).to.deep.equal(Result.ok({ foo: '!', bar: true }));
+      expect(comp({ foo: '!', baz: false })).to.deep.equal(Result.ok({ foo: '!', baz: false }));
+    });
   });
 
   describe('lazy', () => {
