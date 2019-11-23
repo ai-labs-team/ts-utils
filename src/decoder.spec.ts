@@ -8,14 +8,19 @@ import {
 
 import Result from './result';
 import Maybe from './maybe';
-import { over, lensPath, concat, pipe } from 'ramda';
+import { is, over, lensPath, concat, pipe } from 'ramda';
 
 const toDate = (val: string): Result<Error, Date> => (
-  isNaN(Date.parse(val))
+  (isNaN(Date.parse(val)) || !is(String, val))
     ? Result.err(new Error('[Invalid date]'))
     : Result.ok(new Date(val))
 );
 
+const newDate = () => {
+  const d = new Date();
+  d.setMilliseconds(0);
+  return d;
+};
 const isUrl = Result.attempt((val: string) => new URL(val) && val);
 
 describe('Decoder', () => {
@@ -157,6 +162,16 @@ describe('Decoder', () => {
       expect(oneOf<string | number>([string, number])('1138')).to.deep.equal(Result.ok('1138'));
     });
 
+    it('properly fails over from composed decoders', () => {
+      const date = newDate();
+      const decoder = oneOf<Date | number[], Error>([toDate, array(number)]);
+
+      expect(decoder(date.toString())).to.deep.equal(Result.ok(date));
+      expect(decoder([-12345])).to.deep.equal(Result.ok([-12345]));
+
+      expect(decoder(date).error()!.expected).to.equal(Array);
+    });
+
     it('fails if all decoders fail', () => {
       expect(oneOf<boolean | number>([bool, number])('1138')).to.deep.equal(
         Result.err(new DecodeError(Number, '1138'))
@@ -214,8 +229,7 @@ describe('Decoder', () => {
     });
 
     it('correctly infers composed types', () => {
-      const date = new Date();
-      date.setMilliseconds(0);
+      const date = newDate();
       const thingDecoder = object('Thing', { date: pipe(string, parse(toDate)) });
 
       expect(thingDecoder({ date: date.toString() })).to.deep.eq(Result.ok({ date }));
