@@ -29,8 +29,6 @@ export default class Result<Err, Val> {
     return (result: Result<Err, Val>) => result.fold(errFn, fn);
   }
 
-  public static value = <Err, Val>(result: Result<Err, Val>) => result.value();
-
   public static defaultTo = <Err, Val>(val: Val) => (result: Result<Err, Val>) => result.defaultTo(val);
 
   public static isError = <Err, Val>(result: Result<Err, Val>) => result.isError();
@@ -58,10 +56,6 @@ export default class Result<Err, Val> {
 
   private constructor(err: Err, val: Val) {
     Object.freeze(Object.assign(this, { val, err }));
-  }
-
-  public value(): Val | null {
-    return typeof this.val !== 'undefined' && this.val !== null ? this.val : null;
   }
 
   public error(): Err | null {

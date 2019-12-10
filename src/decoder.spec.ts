@@ -221,7 +221,7 @@ describe('Decoder', () => {
         url: pipe(string, parse(isUrl))
       });
 
-      expect(thingDecoder({ url }).value()).to.deep.equal({ url });
+      expect(thingDecoder({ url })).to.deep.equal(Result.ok({ url }));
 
       expect(thingDecoder({ url: '/' }).error()!.toString()).to.equal(
         `Decode Error: [TypeError [ERR_INVALID_URL]]: 'Invalid URL: /' in path: Decoder.object(Thing).url`
