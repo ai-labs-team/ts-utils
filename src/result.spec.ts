@@ -1,4 +1,4 @@
-import { expect } from 'chai';
+import { expect, assert } from 'chai';
 import { identity } from 'ramda';
 import 'mocha';
 
@@ -12,6 +12,20 @@ describe('Result', () => {
       const toStr = (val: any) => Number.prototype.toString.call(val);
       expect(Result.ok<number, string>('Hello').fold(toStr, identity)).to.equal('Hello');
       expect(Result.err<number, string>(3).fold(toStr, identity)).to.equal('3');
+    });
+  });
+
+  describe('toPromise', () => {
+    it('Resolves promise when result has no error', () => {
+      Result.toPromise(Result.ok('Good'))
+        .then(result => expect(result).to.equal('Good'))
+        .catch(() => assert(false, 'Promise rejected when Result had no error'))
+    });
+
+    it('Rejects promise when result errors', () => {
+      Result.toPromise(Result.err('Bad'))
+        .then(() => assert(false, 'Result error promise did not reject'))
+        .catch(err => expect(err).to.equal('Bad'));
     });
   });
 
