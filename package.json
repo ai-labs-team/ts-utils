@@ -21,6 +21,7 @@
   },
   "homepage": "https://github.com/ai-labs-team/ts-utils#readme",
   "dependencies": {
+    "@types/node": "^12.12.17",
     "ramda": "^0.26.1",
     "ts-toolbelt": "^4.8.19"
   },
