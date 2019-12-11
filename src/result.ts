@@ -51,6 +51,10 @@ export default class Result<Err, Val> {
     return result.toMaybe();
   }
 
+  public static toPromise<Err, Val>(result: Result<Err, Val>): Promise<Val> {
+    return result.toPromise();
+  }
+
   private err!: Err;
   private val!: Val;
 
@@ -100,5 +104,12 @@ export default class Result<Err, Val> {
 
   public toMaybe(): Maybe<Val> {
     return this.isError() ? Maybe.empty : Maybe.of(this.val);
+  }
+
+  public toPromise(): Promise<Val> {
+    return this.fold<Promise<Val>>(
+      Promise.reject.bind(Promise),
+      Promise.resolve.bind(Promise),
+    );
   }
 }

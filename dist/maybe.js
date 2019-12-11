@@ -41,6 +41,15 @@ var Maybe = /** @class */ (function () {
     Maybe.isNothing = function (maybe) { return maybe.isNothing(); };
     Maybe.value = function (maybe) { return maybe.value(); };
     /**
+     * Maps a `Array<Maybe<Val>>` into a `Maybe<Array<Val>>` _only_ if none of the array elements
+     * is `Nothing`.
+     */
+    Maybe.all = function (list) {
+        return ramda_1.all(ramda_1.complement(Maybe.isNothing), list)
+            ? Maybe.of(list.map(Maybe.value))
+            : Maybe.empty;
+    };
+    /**
      * Converts a list of `Maybe` to a `Maybe` list, which is `Nothing` unless _all_
      * items in the list have a value.
      */

@@ -25,8 +25,8 @@ var Result = /** @class */ (function () {
     Result.toMaybe = function (result) {
         return result.toMaybe();
     };
-    Result.prototype.value = function () {
-        return typeof this.val !== 'undefined' && this.val !== null ? this.val : null;
+    Result.toPromise = function (result) {
+        return result.toPromise();
     };
     Result.prototype.error = function () {
         return typeof this.err !== 'undefined' && this.err !== null ? this.err : null;
@@ -63,6 +63,9 @@ var Result = /** @class */ (function () {
     Result.prototype.toMaybe = function () {
         return this.isError() ? maybe_1.default.empty : maybe_1.default.of(this.val);
     };
+    Result.prototype.toPromise = function () {
+        return this.fold(Promise.reject.bind(Promise), Promise.resolve.bind(Promise));
+    };
     Result.chain = function (fn) { return function (result) { return result.chain(fn); }; };
     /**
      * Wraps a function that could throw an error, and returns a `Result` that either contains
@@ -73,7 +76,6 @@ var Result = /** @class */ (function () {
     Result.fold = function (errFn, fn) {
         return function (result) { return result.fold(errFn, fn); };
     };
-    Result.value = function (result) { return result.value(); };
     Result.defaultTo = function (val) { return function (result) { return result.defaultTo(val); }; };
     Result.isError = function (result) { return result.isError(); };
     Result.fromMaybe = function (err) { return function (maybe) { return (maybe.isNothing()

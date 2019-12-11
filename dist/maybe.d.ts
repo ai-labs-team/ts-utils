@@ -1,18 +1,23 @@
-export default class Maybe<T> {
-    static map: import("ts-toolbelt/out/types/src/Function/Curry").Curry<(<T_1, U>(fn: (val: T_1) => U, maybe: Maybe<T_1>) => Maybe<U>)>;
+export default class Maybe<Val> {
+    static map: import("ts-toolbelt/out/types/src/Function/Curry").Curry<(<T, U>(fn: (val: T) => U, maybe: Maybe<T>) => Maybe<U>)>;
     static empty: Maybe<any>;
-    static defaultToLazy: import("ts-toolbelt/out/types/src/Function/Curry").Curry<(<T_1>(fn: () => T_1, maybe: Maybe<T_1>) => T_1)>;
-    static defaultTo: import("ts-toolbelt/out/types/src/Function/Curry").Curry<(<T_1>(val: T_1, maybe: Maybe<T_1>) => T_1)>;
-    static orLazy: import("ts-toolbelt/out/types/src/Function/Curry").Curry<(<T_1>(fn: () => Maybe<T_1>, maybe: Maybe<T_1>) => Maybe<T_1>)>;
-    static or: import("ts-toolbelt/out/types/src/Function/Curry").Curry<(<T_1>(val: Maybe<T_1>, maybe: Maybe<T_1>) => Maybe<T_1>)>;
-    static isNothing: <T_1>(maybe: Maybe<T_1>) => boolean;
-    static value: <T_1>(maybe: Maybe<T_1>) => T_1 | null;
-    static of<T>(val: T | null | undefined): Maybe<T>;
+    static defaultToLazy: import("ts-toolbelt/out/types/src/Function/Curry").Curry<(<Val_1>(fn: () => Val_1, maybe: Maybe<Val_1>) => Val_1)>;
+    static defaultTo: import("ts-toolbelt/out/types/src/Function/Curry").Curry<(<Val_1>(val: Val_1, maybe: Maybe<Val_1>) => Val_1)>;
+    static orLazy: import("ts-toolbelt/out/types/src/Function/Curry").Curry<(<Val_1>(fn: () => Maybe<Val_1>, maybe: Maybe<Val_1>) => Maybe<Val_1>)>;
+    static or: import("ts-toolbelt/out/types/src/Function/Curry").Curry<(<Val_1>(val: Maybe<Val_1>, maybe: Maybe<Val_1>) => Maybe<Val_1>)>;
+    static isNothing: <Val_1>(maybe: Maybe<Val_1>) => boolean;
+    static value: <Val_1>(maybe: Maybe<Val_1>) => Val_1 | null;
+    static of<Val>(val: Val | null | undefined): Maybe<Val>;
+    /**
+     * Maps a `Array<Maybe<Val>>` into a `Maybe<Array<Val>>` _only_ if none of the array elements
+     * is `Nothing`.
+     */
+    static all: <Val_1>(list: Maybe<Val_1>[]) => Maybe<Val_1[]>;
     /**
      * Converts a list of `Maybe` to a `Maybe` list, which is `Nothing` unless _all_
      * items in the list have a value.
      */
-    static toList: <T>(maybe: Array<Maybe<T>>) => Maybe<T[]>;
+    static toList: <Val>(maybe: Array<Maybe<Val>>) => Maybe<Val[]>;
     /**
      * Allows an empty `Maybe` value to be typed according to the nullable value it wraps, i.e.:
      *
@@ -21,16 +26,16 @@ export default class Maybe<T> {
      * Maybe.emptyOf<string>(): Maybe<string>
      * ```
      */
-    static emptyOf: <T_1>() => Maybe<T_1>;
+    static emptyOf: <Val_1>() => Maybe<Val_1>;
     private val;
-    constructor(val: T | null | undefined);
-    map<U>(fn: (val: T) => U): Maybe<U>;
+    constructor(val: Val | null | undefined);
+    map<NewVal>(fn: (val: Val) => NewVal): Maybe<NewVal>;
     isNothing(): boolean;
-    value(): T | null;
-    chain<U>(fn: (val: T) => Maybe<U>): Maybe<U>;
-    defaultTo(val: T): T;
-    defaultToLazy(fn: () => T): T;
-    or(alt: Maybe<T>): Maybe<T>;
-    orLazy(fn: () => Maybe<T>): Maybe<T>;
+    value(): Val | null;
+    chain<NewVal>(fn: (val: Val) => Maybe<NewVal>): Maybe<NewVal>;
+    defaultTo(val: Val): Val;
+    defaultToLazy(fn: () => Val): Val;
+    or(alt: Maybe<Val>): Maybe<Val>;
+    orLazy(fn: () => Maybe<Val>): Maybe<Val>;
 }
 //# sourceMappingURL=maybe.d.ts.map
