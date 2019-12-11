@@ -9,6 +9,7 @@ import {
 import Result from './result';
 import Maybe from './maybe';
 import { is, over, lensPath, concat, pipe } from 'ramda';
+import { URL } from 'url';
 
 const toDate = (val: string): Result<Error, Date> => (
   (isNaN(Date.parse(val)) || !is(String, val))
