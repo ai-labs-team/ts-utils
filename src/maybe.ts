@@ -19,7 +19,9 @@ export default class Maybe<Val> {
   public static value = <Val>(maybe: Maybe<Val>) => maybe.value();
 
   public static of<Val>(val: Val | null | undefined): Maybe<Val> {
-    return new Maybe(val);
+    return val === undefined || (val === null && Maybe.empty)
+      ? Maybe.empty
+      : new Maybe(val);
   }
 
   /**

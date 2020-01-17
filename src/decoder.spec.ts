@@ -2,8 +2,8 @@ import { expect } from 'chai';
 import 'mocha';
 
 import {
-  DecodeError, Index, TypedObject, ObjectKey, number, string, inList, boolean,
-  array, oneOf, bool, object, nullable, dict, parse, toEnum, and, Decoded, lazy, Decoder
+  DecodeError, Index, TypedObject, ObjectKey, all, number, string, inList, boolean,
+  array, oneOf, bool, object, nullable, dict, parse, toEnum, and, Decoded, lazy, Decoder, partial
 } from './decoder';
 
 import Result from './result';
@@ -379,7 +379,10 @@ describe('Decoder', () => {
     });
 
     it('fails if any child fails', () => {
-      const newData = over(lensPath(['children', 1, 'children']), concat([{ children: [] }]));
+      const newData = over(
+        lensPath(['children', 1, 'children']),
+        concat<any>([{ children: [] }] as any) as any
+      );
       const json2 = newData(json);
 
       expect(nodeTree(json2)).to.deep.equal(Result.err(new DecodeError(String, undefined, [
@@ -395,7 +398,56 @@ describe('Decoder', () => {
     });
   });
 
+  describe('partial', () => {
+    it('allows object keys to be nullable', () => {
+      const objDecoder = object('Obj', { foo: string });
+      const partialDecoder = partial(objDecoder);
+
+      expect(objDecoder({ foo: 'bar' })).to.deep.equal(Result.ok({ foo: 'bar' }));
+      expect(objDecoder({})).to.deep.equal(Result.err(new DecodeError(String, undefined, [
+        new TypedObject('Obj'),
+        new ObjectKey('foo'),
+      ])));
+      expect(partialDecoder({})).to.deep.equal(Result.ok({ foo: null }));
+    });
+
+    it('allows array elements to be nullable', () => {
+      const decoder = partial(array(number));
+      expect(decoder([123, null, undefined, 456])).to.deep.equal(Result.ok([123, null, null, 456]));
+    });
+  });
+
+  describe('all', () => {
+    it('converts single errors to an array', () => {
+      const decoder = all(number);
+
+      expect(decoder('Hello')).to.deep.equal(Result.err([
+        new DecodeError(Number, 'Hello')
+      ]));
+    });
+
+    it('it aggregates array errors', () => {
+      const data = [123, 'foobar', 456];
+      const decoder = all(array(string));
+
+      expect(decoder(data)).to.deep.equal(Result.err([
+        new DecodeError(String, 123),
+        new DecodeError(String, 456)
+      ]));
+    });
+  });
+
   describe('DecodeError', () => {
+    describe('arrays', () => {
+      it('get index of failed element', () => {
+        const decoder = array(string);
+
+        expect(decoder(['foo', 123])).to.deep.equal(Result.err(
+          new DecodeError(String, 123, [new Index(1)])
+        ));
+      })
+    });
+
     describe('toString', () => {
       it('handles nested paths', () => {
         const err = new DecodeError(Number, 'bad', [
