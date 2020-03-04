@@ -1,6 +1,8 @@
 import Result from './result';
 import Maybe from './maybe';
 
+const identity = <A>(a: A) => a;
+
 const defTag = Symbol.for('@ts-utils/decoder/def');
 
 const spec = <T>(ctor: Function, args: any[], def: (val: any) => T): (val: any) => T => (
