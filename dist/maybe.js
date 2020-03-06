@@ -6,7 +6,9 @@ var Maybe = /** @class */ (function () {
         Object.freeze(Object.assign(this, { val: val }));
     }
     Maybe.of = function (val) {
-        return new Maybe(val);
+        return val === undefined || (val === null && Maybe.empty)
+            ? Maybe.empty
+            : new Maybe(val);
     };
     Maybe.prototype.map = function (fn) {
         return this.isNothing() ? Maybe.empty : Maybe.of(fn(this.val));

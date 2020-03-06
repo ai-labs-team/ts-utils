@@ -97,6 +97,18 @@ export class DecodeError<AltErr = never> {
     return new DecodeError(this.expected, this.val, toArray(key).concat(this.key));
   }
 
+  get name(): string {
+    return (this.expected instanceof Error)
+      ? this.expected.name
+      : ((this.expected as Function).name || this.expected).toString();
+  }
+
+  get message(): string {
+    return (this.expected instanceof Error)
+      ? this.expected.message
+      : this.errMsg();
+  }
+
   private errMsg(): string {
     return (this.expected instanceof Error)
       ? `[${this.expected.name}]: '${this.expected.message}'`
