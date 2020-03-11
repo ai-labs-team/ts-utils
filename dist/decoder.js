@@ -5,10 +5,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 var result_1 = __importDefault(require("./result"));
 var maybe_1 = __importDefault(require("./maybe"));
-var log = function (msg) { return function (val) {
-    console.log(msg, val);
-    return val;
-}; };
 var identity = function (a) { return a; };
 var defTag = Symbol.for('@ts-utils/decoder/def');
 var spec = function (ctor, args, def, opts) {
@@ -167,7 +163,7 @@ function object(name, decoders) {
                 .mapError(DecodeError.nest(new ObjectKey(key), json[key])))
                 .map(function (val) {
                 var _a;
-                return assign(log('obj')(obj), (_a = {}, _a[key] = val, _a));
+                return assign(obj, (_a = {}, _a[key] = val, _a));
             }); }))); }, result_1.default.ok({})).mapError(DecodeError.nest(new TypedObject(n), json)));
     });
 }

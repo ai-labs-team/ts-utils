@@ -5,8 +5,12 @@ const identity = <A>(a: A) => a;
 
 const defTag = Symbol.for('@ts-utils/decoder/def');
 
-const spec = <T>(ctor: Function, args: any[], def: (val: any) => T): (val: any) => T => (
-  Object.assign((val: any) => val === defTag ? ({ ctor, args, def } as unknown as T) : def(val), { [defTag]: true })
+const spec = <T>(ctor: Function, args: any[], def: (val: any, args: any[], opts?: any) => T, opts = {}): (val: any) => T => (
+  Object.assign((val: any) => (
+    val === defTag
+      ? ({ ctor, args, def } as unknown as T)
+      : def(val, args, opts)
+  ), { [defTag]: true })
 );
 
 type DecoderSpec<Val, Err, Args> = {
@@ -170,11 +174,10 @@ export function nullable<Val, AltErr = never>(
 }
 
 export function array<Val>(elementDecoder: ComposedDecoder<Val>) {
-  return spec(array, [elementDecoder], (json: any) => (
+  return spec(array, [elementDecoder], (json: any, [ed], opts: any) => (
     Array.isArray(json)
       ? (json as any[]).reduce((prev: Result<DecodeError, Val[]>, current: any, index: number) => (
-        elementDecoder(current)
-          .mapError(DecodeError.nest(new Index(index), current))
+        (opts && opts.mapFn || identity)(ed(current).mapError(DecodeError.nest(new Index(index), current)))
           .chain((decoded: Val) => prev.map((list: Val[]) => list.concat([decoded])))
       ), Result.ok<DecodeError, Val[]>([]))
       : Result.err<DecodeError, Val[]>(new DecodeError(Array, json))
@@ -208,18 +211,18 @@ export function object<Val, AltErr>(
   name: string,
   decoders: DecoderObject<Val, AltErr>,
 ): Decoder<Val, AltErr> {
-  return spec(object, [name, decoders], (json: any) => (
+  return spec(object, [name, decoders], (json: any, [n, de], opts: any) => (
     (json === null || typeof json !== 'object')
-      ? Result.err(new DecodeError(Object, json, new TypedObject(name)))
-      : (Object.keys(decoders) as Array<keyof Val>).reduce((acc, key) => (
-        acc.chain(obj => (
-          decoders[key](json[key])
-            .mapError(DecodeError.nest(new ObjectKey(key as string), json[key]))
-            .map((val: any) => assign(obj, { [key]: val }) as Val)
+      ? Result.err(new DecodeError(Object, json, new TypedObject(n)))
+      : (Object.keys(de) as Array<keyof Val>).reduce((acc, key) => (
+        (opts && opts.mapFn || identity)(acc.chain(obj => (
+          de[key](json[key])
+            .mapError(DecodeError.nest(new ObjectKey(key as string), json[key])))
+          .map((val: any) => assign(obj, { [key]: val }) as Val)
         ))
       ),
         Result.ok<DecodeError<AltErr>, Val>({} as Val)).mapError(
-          DecodeError.nest<AltErr>(new TypedObject(name), json)
+          DecodeError.nest<AltErr>(new TypedObject(n), json)
         )
   ));
 }
@@ -254,12 +257,11 @@ export function and<ValA, ErrA, ValB, ErrB>(
  * In the general case, `object` should be used instead.
  */
 export function dict<Val, AltErr extends any>(valueDecoder: ComposedDecoder<Val, AltErr>) {
-  return spec(dict, [valueDecoder], (json: any) => (
+  return spec(dict, [valueDecoder], (json: any, [vd], opts: any) => (
     isDefined(json) && isDefined(json.constructor) && json.constructor === Object
       ? Object.keys(json).reduce((acc, key: string) => (
         acc.chain(obj => (
-          valueDecoder(json[key])
-            .mapError(DecodeError.nest(new ObjectKey(key), json[key]))
+          (opts && opts.mapFn || identity)(vd(json[key]).mapError(DecodeError.nest(new ObjectKey(key), json[key])))
             .map((val: Val) => assign(obj, { [key]: val }))
         ))
       ), Result.ok<DecodeError, { [key: string]: Val }>({}))
@@ -283,9 +285,7 @@ export function toEnum<Enum>(name: string, enumVal: Enum) {
     const key = Object.keys(enumVal)
       .find(key => enumVal[key as keyof Enum] === val) as keyof Enum | undefined;
 
-    return Result.fromMaybe(
-      new DecodeError(`Expected a value in enum \`${name}\``, val)
-    )(
+    return Result.fromMaybe(new DecodeError(`Expected a value in enum \`${name}\``, val))(
       key
         ? Maybe.of<Enum>(enumVal[key] as any)
         : Maybe.emptyOf<Enum>()
@@ -352,35 +352,45 @@ export function partial<Val, AltErr>(decoder: Decoder<Val, AltErr>): Decoder<Val
  */
 export function all<Val, AltErr>(decoder: Decoder<Val, AltErr>): (json: any) => Result<DecodeError<AltErr>[], Val> {
 
-  const wrap = <ValInner, AltErr>(path: any[], errorFn: any, decoder: Decoder<ValInner, AltErr>): any => {
+  const wrap = <ValInner, AltErr>(hasParent: boolean, path: any[], errorFn: any, decoder: Decoder<ValInner, AltErr>): any => {
     const extracted = extract(decoder);
+    const mapFn = (res: Result<DecodeError<AltErr>[], Val>) => (
+      res.isError()
+        ? errorFn(res.error()) && Result.ok(null as any)
+        : res
+    );
 
     switch ((extracted && extracted.ctor || decoder) as any) {
       case object:
         const [name, keys] = extracted.args;
+        const newKeys = Object.keys(keys)
+          .map((key: any) => ({ [key]: wrap(true, [], errorFn, (keys as any)[key]) as ComposedDecoder<Val, AltErr> }))
+          .reduce(assign);
 
-        return object(
-          name,
-          Object.keys(keys)
-            .map((key: any) => ({ [key]: wrap([], errorFn, (keys as any)[key]) as ComposedDecoder<Val, AltErr> }))
-            .reduce(assign)
-        ) as unknown as Decoder<ValInner, AltErr>;
+        return spec(object, [name, newKeys], extracted.def, {
+          mapFn: (res: Result<DecodeError<AltErr>[], Val>) => (
+            res.isError()
+              ? errorFn(res.error()) && Result.ok({} as any)
+              : res
+          )
+        }) as unknown as Decoder<ValInner, AltErr>;
+
+      case dict:
+        return spec(dict, [wrap(true, [], errorFn, extracted.args[0] as any)], extracted.def, { mapFn });
 
       case array:
-        return array(wrap([], errorFn, extracted.args[0] as any)) as any;
+        return spec(array, [wrap(true, [], errorFn, extracted.args[0] as any)], extracted.def, { mapFn });
 
       default:
         return (json: any) => {
           const decoded = decoder(json);
 
-          return decoded.isError()
-            ? decoded.mapError(err => {
-              errorFn(new DecodeError(
-                err.expected,
-                err.val,
-                err.key ? path : path.concat(err.key)
-              ))
-            }) && Result.ok(null as any)
+          return (!hasParent && decoded.isError())
+            ? decoded.mapError(err => errorFn(new DecodeError(
+              err.expected,
+              err.val,
+              err.key ? path : path.concat(err.key)
+            ))) && Result.ok(null as any)
             : decoded;
         };
     }
@@ -388,9 +398,9 @@ export function all<Val, AltErr>(decoder: Decoder<Val, AltErr>): (json: any) => 
 
   return (json: any): Result<DecodeError<AltErr>[], Val> => {
     const errors: DecodeError<AltErr>[] = [];
-    const res = wrap([], errors.push.bind(errors), decoder)(json);
+    const res = wrap(false, [], errors.push.bind(errors), decoder)(json);
     return errors.length ? Result.err(errors) : res;
-  }
+  };
 }
 
 /**

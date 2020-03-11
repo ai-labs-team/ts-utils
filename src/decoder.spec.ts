@@ -418,21 +418,74 @@ describe('Decoder', () => {
   });
 
   describe('all', () => {
-    it('converts single errors to an array', () => {
+    describe('scalars', () => {
       const decoder = all(number);
 
-      expect(decoder('Hello')).to.deep.equal(Result.err([
-        new DecodeError(Number, 'Hello')
-      ]));
+      it('converts single errors to an array', () => {
+        expect(decoder('Hello')).to.deep.equal(Result.err([
+          new DecodeError(Number, 'Hello')
+        ]));
+      });
+
+      it('passes through on success', () => {
+        expect(decoder(123)).to.deep.equal(Result.ok(123));
+      });
     });
 
-    it('it aggregates array errors', () => {
-      const data = [123, 'foobar', 456];
+    describe('array', () => {
       const decoder = all(array(string));
 
+      it('aggregates array errors', () => {
+        expect(decoder([123, 'foobar', 456])).to.deep.equal(Result.err([
+          new DecodeError(String, 123, [new Index(0)]),
+          new DecodeError(String, 456, [new Index(2)])
+        ]));
+      });
+
+      it('passes through on success', () => {
+        expect(decoder(['123', 'foobar', '456'])).to.deep.equal(Result.ok([
+          '123', 'foobar', '456'
+        ]));
+      });
+    });
+
+    describe('dict', () => {
+      const decoder = all(dict(bool));
+
+      it('aggregates dict errors', () => {
+        const data = { one: true, two: false, three: 123, four: '456' };
+
+        expect(decoder(data)).to.deep.equal(Result.err([
+          new DecodeError(Boolean, 123, [new ObjectKey('three')]),
+          new DecodeError(Boolean, '456', [new ObjectKey('four')])
+        ]));
+      });
+
+      it('passes through on success', () => {
+        const data = { one: true, two: false, three: false, four: true };
+
+        expect(decoder(data)).to.deep.equal(Result.ok({
+          one: true,
+          two: false,
+          three: false,
+          four: true
+        }));
+      });
+    });
+
+    it('aggregates object errors', () => {
+      const decoder = all(object('Parent', {
+        field: string,
+        child: object('Child', {
+          working: string,
+          field2: number
+        })
+      }));
+      const data = { field: false, child: { working: '!', field2: '-' } };
+
       expect(decoder(data)).to.deep.equal(Result.err([
-        new DecodeError(String, 123),
-        new DecodeError(String, 456)
+        new DecodeError(String, false, [new ObjectKey('field')]),
+        new DecodeError(Number, '-', [new ObjectKey('field2')]),
       ]));
     });
   });
