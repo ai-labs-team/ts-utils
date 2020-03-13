@@ -1,6 +1,6 @@
 {
   "name": "@ailabs/ts-utils",
-  "version": "1.2.4",
+  "version": "1.2.5",
   "description": "Shared TypeScript utilities",
   "main": "./dist/index.js",
   "module": "./dist/index.js",

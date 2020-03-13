@@ -7,6 +7,13 @@ import Maybe from './maybe';
 
 describe('Result', () => {
 
+  describe('mapError', () => {
+    it('Maps the error value', () => {
+      expect(Result.mapError(() => 'Mapped')(Result.err('Bad'))).to.deep.equal(Result.err('Mapped'));
+      expect(Result.mapError(() => 'Mapped')(Result.ok('Good'))).to.deep.equal(Result.ok('Good'));
+    });
+  });
+
   describe('fold', () => {
     it('unifies result and error values', () => {
       const toStr = (val: any) => Number.prototype.toString.call(val);
