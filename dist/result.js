@@ -73,6 +73,7 @@ var Result = /** @class */ (function () {
      */
     Result.attempt = function (fn) { return function (x) { return handleErr(Result.err, function () { return Result.ok(fn(x)); }); }; };
     Result.map = function (fn) { return function (result) { return result.map(fn); }; };
+    Result.mapError = function (fn) { return function (result) { return result.mapError(fn); }; };
     Result.fold = function (errFn, fn) {
         return function (result) { return result.fold(errFn, fn); };
     };
