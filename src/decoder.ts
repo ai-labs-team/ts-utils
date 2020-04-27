@@ -176,7 +176,7 @@ export function nullable<Val, AltErr = never>(
 export function array<Val>(elementDecoder: ComposedDecoder<Val>) {
   return spec(array, [elementDecoder], (json: any, [ed], opts: any) => (
     Array.isArray(json)
-      ? (json as any[]).reduce((prev: Result<DecodeError, Val[]>, current: any, index: number) => (
+      ? (json as Val[]).reduce((prev: Result<DecodeError, Val[]>, current: any, index: number) => (
         (opts && opts.mapFn || identity)(ed(current).mapError(DecodeError.nest(new Index(index), current)))
           .chain((decoded: Val) => prev.map((list: Val[]) => list.concat([decoded])))
       ), Result.ok<DecodeError, Val[]>([]))
