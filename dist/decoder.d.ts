@@ -71,7 +71,7 @@ export declare const boolean: typeof bool;
 export declare function nullable<Val, AltErr = never>(decoder: ComposedDecoder<Val, AltErr>): Decoder<Val | null, AltErr>;
 export declare function nullable<Val, AltErr = never>(decoder: ComposedDecoder<Val, AltErr>, defaultVal: Val): Decoder<Val, AltErr>;
 export declare function nullable<Val, NewVal, AltErr = never>(decoder: Decoder<NewVal, AltErr>, defaultVal: Val, mapper: (a: NewVal) => Val): Decoder<Val, AltErr>;
-export declare function array<Val>(elementDecoder: ComposedDecoder<Val>): (val: any) => any;
+export declare function array<Val>(elementDecoder: ComposedDecoder<Val>): (val: any) => Result<DecodeError<never>, Val[]>;
 /**
  * Tries each one of a list of decoders in order to find one that works, otherwise fails.
  */
