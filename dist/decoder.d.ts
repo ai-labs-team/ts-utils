@@ -99,7 +99,7 @@ export declare function object<Val, AltErr>(name: string, decoders: DecoderObjec
  * ) ==> object({ foo: string, bar: string })
  * ```
  */
-export declare function and<ValA, ErrA, ValB, ErrB>(a: ComposedDecoder<ValA, ErrA>, b: ComposedDecoder<ValB, ErrB>): (val: any) => Result<DecodeError<ErrA | ErrB>, ValA & ValB>;
+export declare function and<ValA, ErrA, ValB, ErrB>(a: ComposedDecoder<ValA, ErrA>, b: ComposedDecoder<ValB, ErrB>): Decoder<ValA & ValB, ErrA | ErrB>;
 /**
  * Decodes an arbitrary collection of key/value pairs. This is useful when
  * the structure or keys aren't known, and they'll be consumed or sanitized
