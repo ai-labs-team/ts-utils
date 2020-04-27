@@ -241,7 +241,7 @@ export function object<Val, AltErr>(
 export function and<ValA, ErrA, ValB, ErrB>(
   a: ComposedDecoder<ValA, ErrA>,
   b: ComposedDecoder<ValB, ErrB>,
-) {
+): Decoder<ValA & ValB, ErrA | ErrB> {
   return spec(and, [a, b], (json: any): Result<DecodeError<ErrA | ErrB>, ValA & ValB> => (
     a(json)
       .chain(valA => b(json).map(valB => assign(valA, valB)))
