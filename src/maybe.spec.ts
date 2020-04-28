@@ -17,7 +17,7 @@ describe('Maybe', () => {
   describe('defaultTo', () => {
     it('uses default values when empty', () => {
       expect((new Maybe<number>(null)).defaultTo(1)).to.equal(1);
-      expect(pipe(Maybe.of, Maybe.defaultTo(1))(null)).to.equal(1);
+      expect(pipe<any, any, any>(Maybe.of, Maybe.defaultTo(1))(null)).to.equal(1);
     });
   });
 

@@ -18,17 +18,18 @@ describe('RemoteData', () => {
 
   describe('defaultTo()', () => {
     it('defaults when no loaded value', () => {
-      expect(RemoteData.defaultTo([], RemoteData.NotLoaded)).to.deep.eq([]);
+      expect(RemoteData.defaultTo([])(RemoteData.NotLoaded)).to.deep.eq([]);
     });
 
     it('returns loaded value', () => {
-      expect(RemoteData.defaultTo(0, RemoteData.Loaded(1))).to.deep.eq(1);
+      expect(RemoteData.defaultTo(0)(RemoteData.Loaded(1))).to.eq(1);
+      expect(RemoteData.Loaded(0).defaultTo(1)).to.eq(0);
     });
   });
 
   describe('mapKeys()', () => {
     it('maps when all keys are loaded', () => {
-      expect(RemoteData.mapKeys(identity, {
+      expect(RemoteData.mapKeys(identity)({
         foo: RemoteData.Loaded(1),
         bar: RemoteData.Loaded(2),
         baz: RemoteData.Loaded(3),
@@ -36,7 +37,7 @@ describe('RemoteData', () => {
     });
 
     it('returns Nothing when keys are not loaded', () => {
-      expect(RemoteData.mapKeys(identity, {
+      expect(RemoteData.mapKeys(identity)({
         foo: RemoteData.Failed('badness'),
         bar: RemoteData.Loaded(2),
         baz: RemoteData.Loaded(3),

@@ -1,10 +1,10 @@
 export default class Maybe<Val> {
-    static map: import("ts-toolbelt/out/types/src/Function/Curry").Curry<(<T, U>(fn: (val: T) => U, maybe: Maybe<T>) => Maybe<U>)>;
+    static map: <T, U>(fn: (val: T) => U) => (maybe: Maybe<T>) => Maybe<U>;
     static empty: Maybe<any>;
-    static defaultToLazy: import("ts-toolbelt/out/types/src/Function/Curry").Curry<(<Val_1>(fn: () => Val_1, maybe: Maybe<Val_1>) => Val_1)>;
-    static defaultTo: import("ts-toolbelt/out/types/src/Function/Curry").Curry<(<Val_1>(val: Val_1, maybe: Maybe<Val_1>) => Val_1)>;
-    static orLazy: import("ts-toolbelt/out/types/src/Function/Curry").Curry<(<Val_1>(fn: () => Maybe<Val_1>, maybe: Maybe<Val_1>) => Maybe<Val_1>)>;
-    static or: import("ts-toolbelt/out/types/src/Function/Curry").Curry<(<Val_1>(val: Maybe<Val_1>, maybe: Maybe<Val_1>) => Maybe<Val_1>)>;
+    static defaultToLazy: <Val_1>(fn: () => Val_1) => (maybe: Maybe<Val_1>) => Val_1;
+    static defaultTo: <Val_1>(val: Val_1) => (maybe: Maybe<Val_1>) => Val_1;
+    static orLazy: <Val_1>(fn: () => Maybe<Val_1>) => (maybe: Maybe<Val_1>) => Maybe<Val_1>;
+    static or: <Val_1>(val: Maybe<Val_1>) => (maybe: Maybe<Val_1>) => Maybe<Val_1>;
     static isNothing: <Val_1>(maybe: Maybe<Val_1>) => boolean;
     static value: <Val_1>(maybe: Maybe<Val_1>) => Val_1 | null;
     static of<Val>(val: Val | null | undefined): Maybe<Val>;

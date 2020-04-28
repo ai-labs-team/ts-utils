@@ -155,7 +155,7 @@ exports.Failed = function (error) { return new DataFailed(error); };
  * @typeparam E The `Error` value of the passed `RemoteData` instance
  */
 exports.map = function (fn) { return function (rd) { return (rd.map(fn)); }; };
-exports.defaultTo = ramda_1.curry(function (val, rd) { return (rd.defaultTo(val)); });
+exports.defaultTo = function (val) { return function (rd) { return (rd.defaultTo(val)); }; };
 exports.toMaybe = function (rd) { return (rd instanceof DataLoaded ? maybe_1.default.of(rd[valueTag]) : maybe_1.default.empty); };
 /**
  * Accepts a mapping function, and an object where all values are `RemoteData`.
@@ -169,9 +169,9 @@ exports.toMaybe = function (rd) { return (rd instanceof DataLoaded ? maybe_1.def
  * @param fn The mapping function—accepts a keyed object where the values are unwrapped data
  * @param rd An object of key/value pairs, where the values are `RemoteData`-wrapped values
  */
-exports.mapKeys = ramda_1.curry(function (fn, data) { return (maybe_1.default.all(Object.keys(data).map(function (key) { return data[key].toMaybe(); }))
+exports.mapKeys = function (fn) { return function (data) { return (maybe_1.default.all(Object.keys(data).map(function (key) { return data[key].toMaybe(); }))
     .map(ramda_1.zipObj(Object.keys(data)))
-    .map(fn)); });
+    .map(fn)); }; };
 exports.fromJSON = ramda_1.cond([
     [ramda_1.propEq('state', 'loading'), ramda_1.always(exports.Loading)],
     [ramda_1.propEq('state', 'loaded'), function (_a) {
