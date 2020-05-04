@@ -142,7 +142,7 @@ export const bool: Decoder<boolean> = (json: any) => toDecodeResult<boolean>(typ
 export const boolean: typeof bool = bool;
 
 /**
- * Wraps a decoder to let it be `null` or unspecified. Optionally, you can specify a default
+ * Wraps a decoder to let it be `null` or `undefined`. Optionally, you can specify a default
  * value and/or a mapping function that will apply to values if they are specified. This makes
  * it possible to, for example, convert a nullable value to a `Maybe`:
  *
@@ -150,7 +150,7 @@ export const boolean: typeof bool = bool;
  * nullable(string, Maybe.emptyOf<string>(), Maybe.of)
  * ```
  */
-export function nullable<Val, AltErr = never>(decoder: ComposedDecoder<Val, AltErr>): Decoder<Val | null, AltErr>;
+export function nullable<Val, AltErr = never>(decoder: ComposedDecoder<Val, AltErr>): Decoder<Val | null | undefined, AltErr>;
 export function nullable<Val, AltErr = never>(decoder: ComposedDecoder<Val, AltErr>, defaultVal: Val): Decoder<Val, AltErr>;
 export function nullable<Val, NewVal, AltErr = never>(
   decoder: Decoder<NewVal, AltErr>,
@@ -161,7 +161,7 @@ export function nullable<Val, AltErr = never>(
   decoder: ComposedDecoder<Val, AltErr>,
   defaultVal?: Val,
   mapper?: (a: Val) => Val,
-): ComposedDecoder<Val | null, AltErr> {
+): ComposedDecoder<Val | null | undefined, AltErr> {
   return spec(nullable, [decoder, defaultVal, mapper], (json: any) => (
     (!isDefined(json) && isDefined(defaultVal))
       ? Result.ok<DecodeError<AltErr> | AltErr, Val>(defaultVal! as Val)
@@ -169,7 +169,7 @@ export function nullable<Val, AltErr = never>(
         ? decoder(json).map(mapper!)
         : isDefined(json)
           ? decoder(json)
-          : Result.ok<DecodeError<AltErr> | AltErr, Val | null>(null)
+          : Result.ok<DecodeError<AltErr> | AltErr, Val | null | undefined>(null)
   ));
 }
 

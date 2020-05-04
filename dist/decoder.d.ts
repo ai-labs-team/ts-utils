@@ -60,7 +60,7 @@ export declare const number: Decoder<number>;
 export declare const bool: Decoder<boolean>;
 export declare const boolean: typeof bool;
 /**
- * Wraps a decoder to let it be `null` or unspecified. Optionally, you can specify a default
+ * Wraps a decoder to let it be `null` or `undefined`. Optionally, you can specify a default
  * value and/or a mapping function that will apply to values if they are specified. This makes
  * it possible to, for example, convert a nullable value to a `Maybe`:
  *
@@ -68,7 +68,7 @@ export declare const boolean: typeof bool;
  * nullable(string, Maybe.emptyOf<string>(), Maybe.of)
  * ```
  */
-export declare function nullable<Val, AltErr = never>(decoder: ComposedDecoder<Val, AltErr>): Decoder<Val | null, AltErr>;
+export declare function nullable<Val, AltErr = never>(decoder: ComposedDecoder<Val, AltErr>): Decoder<Val | null | undefined, AltErr>;
 export declare function nullable<Val, AltErr = never>(decoder: ComposedDecoder<Val, AltErr>, defaultVal: Val): Decoder<Val, AltErr>;
 export declare function nullable<Val, NewVal, AltErr = never>(decoder: Decoder<NewVal, AltErr>, defaultVal: Val, mapper: (a: NewVal) => Val): Decoder<Val, AltErr>;
 export declare function array<Val, AltErr = never>(elementDecoder: ComposedDecoder<Val>): Decoder<Val[], AltErr>;
