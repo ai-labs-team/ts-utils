@@ -42,6 +42,7 @@ var Maybe = /** @class */ (function () {
     Maybe.or = function (val) { return function (maybe) { return maybe.or(val); }; };
     Maybe.isNothing = function (maybe) { return maybe.isNothing(); };
     Maybe.value = function (maybe) { return maybe.value(); };
+    Maybe.chain = function (fn) { return function (maybe) { return maybe.chain(fn); }; };
     /**
      * Maps a `Array<Maybe<Val>>` into a `Maybe<Array<Val>>` _only_ if none of the array elements
      * is `Nothing`.
