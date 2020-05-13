@@ -18,6 +18,8 @@ export default class Maybe<Val> {
 
   public static value = <Val>(maybe: Maybe<Val>) => maybe.value();
 
+  public static chain = <T, U>(fn: (val: T) => Maybe<U>) => (maybe: Maybe<T>): Maybe<U> => maybe.chain(fn);
+
   public static of<Val>(val: Val | null | undefined): Maybe<Val> {
     return val === undefined || (val === null && Maybe.empty)
       ? Maybe.empty

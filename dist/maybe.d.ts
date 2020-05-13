@@ -7,6 +7,7 @@ export default class Maybe<Val> {
     static or: <Val_1>(val: Maybe<Val_1>) => (maybe: Maybe<Val_1>) => Maybe<Val_1>;
     static isNothing: <Val_1>(maybe: Maybe<Val_1>) => boolean;
     static value: <Val_1>(maybe: Maybe<Val_1>) => Val_1 | null;
+    static chain: <T, U>(fn: (val: T) => Maybe<U>) => (maybe: Maybe<T>) => Maybe<U>;
     static of<Val>(val: Val | null | undefined): Maybe<Val>;
     /**
      * Maps a `Array<Maybe<Val>>` into a `Maybe<Array<Val>>` _only_ if none of the array elements
