@@ -1,0 +1,31 @@
+name: build-and-publish
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build-and-publish:
+    name: Build And Publish
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup Node v10.x
+        uses: actions/setup-node@v1
+        with:
+          node-version: 10.x
+
+      - name: Install dependencies
+        run: yarn
+
+      - name: Build
+        run: yarn build
+
+      - name: Publish to NPM
+        uses: JS-DevTools/npm-publish@v1
+        with:
+          token: ${{ secrets.NPM_TOKEN }}
