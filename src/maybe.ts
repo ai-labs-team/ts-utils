@@ -20,6 +20,8 @@ export default class Maybe<Val> {
 
   public static chain = <T, U>(fn: (val: T) => Maybe<U>) => (maybe: Maybe<T>): Maybe<U> => maybe.chain(fn);
 
+  public static filter = <T>(fn: (val: T) => boolean) => (maybe: Maybe<T>): Maybe<T> => maybe.filter(fn);
+
   public static of<Val>(val: Val | null | undefined): Maybe<Val> {
     return val === undefined || (val === null && Maybe.empty)
       ? Maybe.empty
@@ -92,5 +94,9 @@ export default class Maybe<Val> {
 
   public orLazy(fn: () => Maybe<Val>): Maybe<Val> {
     return this.isNothing() ? fn() : this;
+  }
+
+  public filter(fn: (val: Val) => boolean): Maybe<Val> {
+    return fn(this.val) ? this : Maybe.empty;
   }
 }
