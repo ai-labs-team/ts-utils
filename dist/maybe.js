@@ -35,7 +35,7 @@ var Maybe = /** @class */ (function () {
         return this.isNothing() ? fn() : this;
     };
     Maybe.prototype.filter = function (fn) {
-        return fn(this.val) ? this : Maybe.empty;
+        return this.isNothing() ? Maybe.empty : fn(this.val) ? this : Maybe.empty;
     };
     Maybe.map = function (fn) { return function (maybe) { return maybe.map(fn); }; };
     Maybe.empty = Maybe.of(null);

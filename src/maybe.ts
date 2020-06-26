@@ -97,6 +97,6 @@ export default class Maybe<Val> {
   }
 
   public filter(fn: (val: Val) => boolean): Maybe<Val> {
-    return fn(this.val) ? this : Maybe.empty;
+    return this.isNothing() ? Maybe.empty : fn(this.val) ? this : Maybe.empty;
   }
 }
