@@ -80,4 +80,22 @@ describe('Maybe', () => {
       });
     });
   });
+
+  describe('filter', () => {
+    /**
+     * @link https://github.com/sanctuary-js/sanctuary-maybe#maybefantasy-landfilter--maybeaa-boolean---maybea
+     */
+
+    it('mimics spec 1', () => {
+      expect(Maybe.empty.filter(isFinite)).to.deep.eq(Maybe.empty);
+    });
+
+    it('mimics spec 2', () => {
+      expect(Maybe.of(Infinity).filter(isFinite)).to.deep.eq(Maybe.empty);
+    });
+
+    it('mimics spec 3', () => {
+      expect(Maybe.of(Number.MAX_SAFE_INTEGER).filter(isFinite)).to.deep.eq(Maybe.of(9007199254740991));
+    });
+  });
 });
