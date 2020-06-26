@@ -8,6 +8,7 @@ export default class Maybe<Val> {
     static isNothing: <Val_1>(maybe: Maybe<Val_1>) => boolean;
     static value: <Val_1>(maybe: Maybe<Val_1>) => Val_1 | null;
     static chain: <T, U>(fn: (val: T) => Maybe<U>) => (maybe: Maybe<T>) => Maybe<U>;
+    static filter: <T>(fn: (val: T) => boolean) => (maybe: Maybe<T>) => Maybe<T>;
     static of<Val>(val: Val | null | undefined): Maybe<Val>;
     /**
      * Maps a `Array<Maybe<Val>>` into a `Maybe<Array<Val>>` _only_ if none of the array elements
@@ -38,5 +39,6 @@ export default class Maybe<Val> {
     defaultToLazy(fn: () => Val): Val;
     or(alt: Maybe<Val>): Maybe<Val>;
     orLazy(fn: () => Maybe<Val>): Maybe<Val>;
+    filter(fn: (val: Val) => boolean): Maybe<Val>;
 }
 //# sourceMappingURL=maybe.d.ts.map
