@@ -81,7 +81,7 @@ describe('Maybe', () => {
     });
   });
 
-  describe.only('filter', () => {
+  describe('filter', () => {
     /**
      * @link https://github.com/sanctuary-js/sanctuary-maybe#maybefantasy-landfilter--maybeaa-boolean---maybea
      */
