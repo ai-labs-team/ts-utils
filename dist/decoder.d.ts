@@ -6,6 +6,12 @@ declare type DecoderSpec<Val, Err, Args> = {
 };
 export declare function extract<Val, Err>(decoder: ReturnType<typeof object>): DecoderSpec<Val, Err, [string, DecoderObject<Val, Err>]>;
 export declare function extract<Val, Err>(decoder: ReturnType<typeof dict>): DecoderSpec<Val, Err, [Decoder<Val, Err>]>;
+export declare function extract<Val, Err>(decoder: ReturnType<typeof dict>): DecoderSpec<Val, Err, [Decoder<Val, Err>]>;
+export declare function extract<Val, Err>(decoder: Partial<Pick<object, never>>): DecoderSpec<Val, Err, [string, DecoderObject<Val, Err>]>;
+export declare function extract<Val, Err>(decoder: OptionalNullable<object>): DecoderSpec<Val, Err, [string, DecoderObject<Val, Err>]>;
+export declare function extract<Val, Err>(decoder: {
+    [key: string]: unknown;
+}): DecoderSpec<Val, Err, [string, DecoderObject<Val, Err>]>;
 export declare type Decoder<Val, AltErr = never> = (json: any) => Result<DecodeError<AltErr>, Val>;
 export declare type ComposedDecoder<Val, AltErr = never> = (json: any) => Result<AltErr | DecodeError<AltErr>, Val>;
 /**
@@ -55,7 +61,7 @@ export declare class TypedObject {
  * Represents a failed decode operation.
  */
 export declare class DecodeError<AltErr = never> {
-    static nest<AltErr = never>(key: PathElement, val: any): (err: AltErr | DecodeError<AltErr>) => DecodeError<AltErr>;
+    static nest<AltErr = never>(key: PathElement, val: any): (err: DecodeError<AltErr> | AltErr) => DecodeError<AltErr>;
     expected: Error | Function | string;
     val: any;
     key: PathElement[];
@@ -101,7 +107,7 @@ export declare function oneOf<Val, AltErr = never>(decoders: ReadonlyArray<Compo
  * });
  * ```
  */
-export declare function object<Val, AltErr>(name: string, decoders: DecoderObject<Val, AltErr>): Decoder<OptionalNullable<Val>, AltErr>;
+export declare function object<Val extends object, AltErr>(name: string, decoders: DecoderObject<Val, AltErr>): Decoder<OptionalNullable<Val>, AltErr>;
 /**
  * Creates an intersection between two decoders. Equivalent to TypeScript's `&` operator.
  *
@@ -113,7 +119,7 @@ export declare function object<Val, AltErr>(name: string, decoders: DecoderObjec
  * ) ==> object({ foo: string, bar: string })
  * ```
  */
-export declare function and<ValA, ErrA, ValB, ErrB>(a: ComposedDecoder<ValA, ErrA>, b: ComposedDecoder<ValB, ErrB>): Decoder<ValA & ValB, ErrA | ErrB>;
+export declare function and<ValA extends object, ErrA, ValB extends object, ErrB>(a: ComposedDecoder<ValA, ErrA>, b: ComposedDecoder<ValB, ErrB>): Decoder<ValA & ValB, ErrA | ErrB>;
 /**
  * Decodes an arbitrary collection of key/value pairs. This is useful when
  * the structure or keys aren't known, and they'll be consumed or sanitized
@@ -132,7 +138,7 @@ export declare const lazy: <Val, AltErr = never>(wrapped: () => ComposedDecoder<
 /**
  * Attempts to convert a raw JSON value to an enum type.
  */
-export declare function toEnum<Enum>(name: string, enumVal: Enum): (val: any) => Result<DecodeError<never>, Enum[keyof Enum]>;
+export declare function toEnum<Enum extends object>(name: string, enumVal: Enum): (val: any) => Result<DecodeError<never>, Enum[keyof Enum]>;
 /**
  * Asserts that a string or number is in a list. The list should be declared `as const`.
  * Useful for converting an arbitrary value to a union type.
@@ -152,7 +158,7 @@ export declare function inList<Union>(list: readonly Union[]): (val: any) => Res
 /**
  * Makes the child members of a composed decoder (i.e. `object()`) nullable.
  */
-export declare function partial<Val, AltErr>(decoder: Decoder<Val, AltErr>): Decoder<NullablePartial<Val> | null, AltErr>;
+export declare function partial<Val extends object, AltErr>(decoder: Decoder<Val, AltErr>): Decoder<Partial<Val>, AltErr>;
 /**
  * Takes a composed decoder and returns one that, if decoding fails,
  * collects all failures, rather than breaking on the first one.
