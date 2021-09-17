@@ -3,6 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.parse = exports.all = exports.partial = exports.inList = exports.toEnum = exports.lazy = exports.dict = exports.and = exports.object = exports.oneOf = exports.array = exports.nullable = exports.boolean = exports.bool = exports.number = exports.string = exports.DecodeError = exports.TypedObject = exports.ObjectKey = exports.Index = exports.extract = void 0;
 var result_1 = __importDefault(require("./result"));
 var maybe_1 = __importDefault(require("./maybe"));
 var identity = function (a) { return a; };
@@ -77,7 +78,7 @@ var DecodeError = /** @class */ (function () {
                 ? this.expected.name
                 : (this.expected.name || this.expected).toString();
         },
-        enumerable: true,
+        enumerable: false,
         configurable: true
     });
     Object.defineProperty(DecodeError.prototype, "message", {
@@ -86,7 +87,7 @@ var DecodeError = /** @class */ (function () {
                 ? this.expected.message
                 : this.errMsg();
         },
-        enumerable: true,
+        enumerable: false,
         configurable: true
     });
     DecodeError.prototype.errMsg = function () {
@@ -112,9 +113,12 @@ var toDecodeResult = function (worked, typeVal, val, key) {
         ? result_1.default.ok(val)
         : result_1.default.err(new DecodeError(typeVal, val, key)));
 };
-exports.string = function (json) { return toDecodeResult(typeof json === 'string', String, json); };
-exports.number = function (json) { return toDecodeResult(typeof json === 'number', Number, json); };
-exports.bool = function (json) { return toDecodeResult(typeof json === 'boolean', Boolean, json); };
+var string = function (json) { return toDecodeResult(typeof json === 'string', String, json); };
+exports.string = string;
+var number = function (json) { return toDecodeResult(typeof json === 'number', Number, json); };
+exports.number = number;
+var bool = function (json) { return toDecodeResult(typeof json === 'boolean', Boolean, json); };
+exports.bool = bool;
 exports.boolean = exports.bool;
 function nullable(decoder, defaultVal, mapper) {
     return spec(nullable, [decoder, defaultVal, mapper], function (json) { return ((!isDefined(json) && isDefined(defaultVal))
@@ -209,7 +213,8 @@ exports.dict = dict;
  * Allows using a decoder wrapped in a function. Useful for recursive data
  * structures.
  */
-exports.lazy = function (wrapped) { return function (json) { return (wrapped()(json)); }; };
+var lazy = function (wrapped) { return function (json) { return (wrapped()(json)); }; };
+exports.lazy = lazy;
 /**
  * Attempts to convert a raw JSON value to an enum type.
  */
@@ -255,14 +260,12 @@ function partial(decoder) {
                 var _a;
                 return (_a = {}, _a[key] = nullable(args[1][key]), _a);
             }).reduce(assign));
-        case dict:
-            return dict(nullable(args[0]));
         case array:
             return array(nullable(args[0]));
         case and:
             return and(partial(args[0]), partial(args[1]));
         default:
-            return decoder;
+            return nullable(decoder);
     }
 }
 exports.partial = partial;
@@ -315,5 +318,6 @@ exports.all = all;
  * with `Decoder` functions. Useful for functions that do type conversions that can fail, i.e.
  * string to `Date`.
  */
-exports.parse = function (fn) { return result_1.default.chain(fn); };
+var parse = function (fn) { return result_1.default.chain(fn); };
+exports.parse = parse;
 //# sourceMappingURL=decoder.js.map

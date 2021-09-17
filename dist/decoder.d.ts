@@ -41,7 +41,7 @@ export declare class TypedObject {
  * Represents a failed decode operation.
  */
 export declare class DecodeError<AltErr = never> {
-    static nest<AltErr = never>(key: PathElement, val: any): (err: AltErr | DecodeError<AltErr>) => DecodeError<AltErr>;
+    static nest<AltErr = never>(key: PathElement, val: any): (err: DecodeError<AltErr> | AltErr) => DecodeError<AltErr>;
     expected: Error | Function | string;
     val: any;
     key: PathElement[];
@@ -138,7 +138,7 @@ export declare function inList<Union>(list: readonly Union[]): (val: any) => Res
 /**
  * Makes the child members of a composed decoder (i.e. `object()`) nullable.
  */
-export declare function partial<Val, AltErr>(decoder: Decoder<Val, AltErr>): Decoder<Val | null, AltErr>;
+export declare function partial<Val extends object, AltErr>(decoder: Decoder<Val, AltErr>): Decoder<Partial<Val>, AltErr>;
 /**
  * Takes a composed decoder and returns one that, if decoding fails,
  * collects all failures, rather than breaking on the first one.

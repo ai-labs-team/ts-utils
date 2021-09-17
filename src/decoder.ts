@@ -319,7 +319,9 @@ export function inList<Union>(list: readonly Union[]) {
 /**
  * Makes the child members of a composed decoder (i.e. `object()`) nullable.
  */
-export function partial<Val, AltErr>(decoder: Decoder<Val, AltErr>): Decoder<Val | null, AltErr> {
+export function partial<Val extends object, AltErr>(decoder: Decoder<Val, AltErr>):
+  Decoder<Partial<Val>, AltErr> {
+
   const { ctor, args } = extract(decoder);
 
   switch (ctor as any) {
@@ -327,22 +329,19 @@ export function partial<Val, AltErr>(decoder: Decoder<Val, AltErr>): Decoder<Val
       return object(
         args[0],
         Object.keys(args[1]).map(key => ({ [key]: nullable((args[1] as any)[key]) })).reduce(assign)
-      ) as unknown as Decoder<Val | null, AltErr>;
-
-    case dict:
-      return dict(nullable(args[0] as any as ComposedDecoder<Val>)) as unknown as Decoder<Val | null, AltErr>;
+      ) as unknown as Decoder<Partial<Val>, AltErr>;
 
     case array:
-      return array(nullable(args[0] as any as ComposedDecoder<Val>)) as unknown as Decoder<Val | null, AltErr>;
+      return array(nullable((args[0] as any as ComposedDecoder<Val>))) as unknown as Decoder<Partial<Val>, AltErr>;
 
     case and:
       return and(
-        partial(args[0] as any as ComposedDecoder<Val>),
-        partial(args[1] as any as ComposedDecoder<Val>)
+        partial((args[0] as any as ComposedDecoder<Val>)),
+        partial((args[1] as any as ComposedDecoder<Val>)),
       );
 
     default:
-      return decoder;
+      return nullable(decoder) as any;
   }
 }
 
