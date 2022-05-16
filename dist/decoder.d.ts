@@ -18,6 +18,16 @@ export declare type Decoded<Model, AltErr = never> = Model extends Decoder<infer
 export declare type DecoderObject<Val, AltErr extends any> = {
     [Key in keyof Val]: ComposedDecoder<Val[Key], AltErr>;
 };
+/**
+ * Treats nullable fields as optional
+ * https://github.com/Microsoft/TypeScript/issues/12400#issuecomment-758523767
+ */
+export declare type OptionalNullable<T> = Optional<T> & Required<T>;
+declare type Optional<T> = Partial<Pick<T, KeysOfType<T, null | undefined>>>;
+declare type Required<T> = Omit<T, KeysOfType<T, null | undefined>>;
+declare type KeysOfType<T, SelectedType> = {
+    [key in keyof T]: SelectedType extends T[key] ? key : never;
+}[keyof T];
 declare type PathElement = TypedObject | Index | ObjectKey | Array<any>;
 export declare class Index {
     index: number;
@@ -87,7 +97,7 @@ export declare function oneOf<Val, AltErr = never>(decoders: ReadonlyArray<Compo
  * });
  * ```
  */
-export declare function object<Val, AltErr>(name: string, decoders: DecoderObject<Val, AltErr>): Decoder<Val, AltErr>;
+export declare function object<Val, AltErr>(name: string, decoders: DecoderObject<Val, AltErr>): Decoder<OptionalNullable<Val>, AltErr>;
 /**
  * Creates an intersection between two decoders. Equivalent to TypeScript's `&` operator.
  *
