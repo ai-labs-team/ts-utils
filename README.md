@@ -222,7 +222,7 @@ const taskList: Result<DecodeError<Error>, TaskList> = tasks(data);
 
 console.log(taskList.error()!.toString());
 
-// ==> Decode Error: [TypeError [ERR_INVALID_URL]]: 'Invalid URL: invalid.url' \
+// ==> Decode Error: [TypeError]: 'Invalid URL: invalid.url' \
 //       in path: [0] > \
 //       Decoder.object(Task).owner > \
 //       Decoder.object(Person).avatarUrl

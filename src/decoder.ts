@@ -46,6 +46,10 @@ export type DecoderObject<Val, AltErr extends any> = {
   [Key in keyof Val]: ComposedDecoder<Val[Key], AltErr>
 };
 
+export type PartialNullable<Val> = {
+  [Key in keyof Val]?: Val[Key] | null;
+}
+
 type PathElement = TypedObject | Index | ObjectKey | Array<any>;
 
 export class Index {
@@ -319,7 +323,7 @@ export function inList<Union>(list: readonly Union[]) {
 /**
  * Makes the child members of a composed decoder (i.e. `object()`) nullable.
  */
-export function partial<Val, AltErr>(decoder: Decoder<Val, AltErr>): Decoder<Val | null, AltErr> {
+export function partial<Val, AltErr>(decoder: Decoder<Val, AltErr>): Decoder<PartialNullable<Val> | null, AltErr> {
   const { ctor, args } = extract(decoder);
 
   switch (ctor as any) {
@@ -327,13 +331,13 @@ export function partial<Val, AltErr>(decoder: Decoder<Val, AltErr>): Decoder<Val
       return object(
         args[0],
         Object.keys(args[1]).map(key => ({ [key]: nullable((args[1] as any)[key]) })).reduce(assign)
-      ) as unknown as Decoder<Val | null, AltErr>;
+      ) as unknown as Decoder<PartialNullable<Val> | null, AltErr>;
 
     case dict:
-      return dict(nullable(args[0] as any as ComposedDecoder<Val>)) as unknown as Decoder<Val | null, AltErr>;
+      return dict(nullable(args[0] as any as ComposedDecoder<Val>)) as unknown as Decoder<PartialNullable<Val> | null, AltErr>;
 
     case array:
-      return array(nullable(args[0] as any as ComposedDecoder<Val>)) as unknown as Decoder<Val | null, AltErr>;
+      return array(nullable(args[0] as any as ComposedDecoder<Val>)) as unknown as Decoder<PartialNullable<Val> | null, AltErr>;
 
     case and:
       return and(
