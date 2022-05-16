@@ -18,8 +18,9 @@ export declare type Decoded<Model, AltErr = never> = Model extends Decoder<infer
 export declare type DecoderObject<Val, AltErr extends any> = {
     [Key in keyof Val]: ComposedDecoder<Val[Key], AltErr>;
 };
-export declare type PartialNullable<Val> = {
-    [Key in keyof Val]?: Val[Key] | null;
+export declare type Nullable<Val> = Val | null | undefined;
+export declare type Partial<Val> = {
+    [Key in keyof Val]: Nullable<Val[Key]>;
 };
 declare type PathElement = TypedObject | Index | ObjectKey | Array<any>;
 export declare class Index {
@@ -141,7 +142,7 @@ export declare function inList<Union>(list: readonly Union[]): (val: any) => Res
 /**
  * Makes the child members of a composed decoder (i.e. `object()`) nullable.
  */
-export declare function partial<Val, AltErr>(decoder: Decoder<Val, AltErr>): Decoder<PartialNullable<Val> | null, AltErr>;
+export declare function partial<Val, AltErr>(decoder: Decoder<Val, AltErr>): Decoder<Partial<Val> | null, AltErr>;
 /**
  * Takes a composed decoder and returns one that, if decoding fails,
  * collects all failures, rather than breaking on the first one.

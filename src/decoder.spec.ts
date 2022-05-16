@@ -225,7 +225,7 @@ describe('Decoder', () => {
       expect(thingDecoder({ url })).to.deep.equal(Result.ok({ url }));
 
       expect(thingDecoder({ url: '/' }).error()!.toString()).to.equal(
-        `Decode Error: [TypeError]: 'Invalid URL: /' in path: Decoder.object(Thing).url`
+        `Decode Error: [TypeError [ERR_INVALID_URL]]: 'Invalid URL: /' in path: Decoder.object(Thing).url`
       );
     });
 
@@ -560,7 +560,7 @@ describe('Decoder', () => {
       const taskList: Result<DecodeError<Error>, TaskList> = tasks(data);
 
       expect(taskList.error()!.toString()).to.equal([
-        `Decode Error: [TypeError]: 'Invalid URL: invalid.url'`,
+        `Decode Error: [TypeError [ERR_INVALID_URL]]: 'Invalid URL: invalid.url'`,
         'in path: [0] > Decoder.object(Task).owner > Decoder.object(Person).avatarUrl'
       ].join(' '))
     });
