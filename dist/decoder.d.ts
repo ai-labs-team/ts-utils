@@ -22,6 +22,16 @@ export declare type NullableObject<Val> = {
     [Key in keyof Val]: Val | null | undefined;
 };
 export declare type NullablePartial<Val> = Partial<NullableObject<Val>>;
+/**
+ * Treats nullable fields as optional
+ * https://github.com/Microsoft/TypeScript/issues/12400#issuecomment-758523767
+ */
+export declare type OptionalNullable<T> = Optional<T> & Required<T>;
+declare type Optional<T> = Partial<Pick<T, KeysOfType<T, null | undefined>>>;
+declare type Required<T> = Omit<T, KeysOfType<T, null | undefined>>;
+declare type KeysOfType<T, SelectedType> = {
+    [key in keyof T]: SelectedType extends T[key] ? key : never;
+}[keyof T];
 declare type PathElement = TypedObject | Index | ObjectKey | Array<any>;
 export declare class Index {
     index: number;
@@ -91,7 +101,7 @@ export declare function oneOf<Val, AltErr = never>(decoders: ReadonlyArray<Compo
  * });
  * ```
  */
-export declare function object<Val, AltErr>(name: string, decoders: DecoderObject<Val, AltErr>): Decoder<Val, AltErr>;
+export declare function object<Val, AltErr>(name: string, decoders: DecoderObject<Val, AltErr>): Decoder<OptionalNullable<Val>, AltErr>;
 /**
  * Creates an intersection between two decoders. Equivalent to TypeScript's `&` operator.
  *

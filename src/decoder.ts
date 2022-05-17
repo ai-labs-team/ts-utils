@@ -52,6 +52,15 @@ export type NullableObject<Val> = {
 
 export type NullablePartial<Val> = Partial<NullableObject<Val>>;
 
+/**
+ * Treats nullable fields as optional
+ * https://github.com/Microsoft/TypeScript/issues/12400#issuecomment-758523767
+ */
+export type OptionalNullable<T> = Optional<T> & Required<T>;
+type Optional<T> = Partial<Pick<T, KeysOfType<T, null | undefined>>>;
+type Required<T> = Omit<T, KeysOfType<T, null | undefined>>;
+type KeysOfType<T, SelectedType> = { [key in keyof T]: SelectedType extends T[key] ? key : never }[keyof T];
+
 type PathElement = TypedObject | Index | ObjectKey | Array<any>;
 
 export class Index {
@@ -216,7 +225,7 @@ export function oneOf<Val, AltErr = never>(decoders: ReadonlyArray<ComposedDecod
 export function object<Val, AltErr>(
   name: string,
   decoders: DecoderObject<Val, AltErr>,
-): Decoder<Val, AltErr> {
+): Decoder<OptionalNullable<Val>, AltErr> {
   return spec(object, [name, decoders], (json: any, [n, de], opts: any) => (
     (json === null || typeof json !== 'object')
       ? Result.err(new DecodeError(Object, json, new TypedObject(n)))
