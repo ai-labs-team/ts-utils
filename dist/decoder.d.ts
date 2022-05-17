@@ -19,7 +19,7 @@ export declare type DecoderObject<Val, AltErr extends any> = {
     [Key in keyof Val]: ComposedDecoder<Val[Key], AltErr>;
 };
 export declare type NullableObject<Val> = {
-    [Key in keyof Val]: Val | null | undefined;
+    [Key in keyof Val]: Val[Key] | null | undefined;
 };
 export declare type NullablePartial<Val> = Partial<NullableObject<Val>>;
 /**

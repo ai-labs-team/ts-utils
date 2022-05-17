@@ -47,7 +47,7 @@ export type DecoderObject<Val, AltErr extends any> = {
 };
 
 export type NullableObject<Val> = {
-  [Key in keyof Val]: Val | null | undefined;
+  [Key in keyof Val]: Val[Key] | null | undefined;
 };
 
 export type NullablePartial<Val> = Partial<NullableObject<Val>>;
