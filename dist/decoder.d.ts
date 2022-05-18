@@ -18,6 +18,10 @@ export declare type Decoded<Model, AltErr = never> = Model extends Decoder<infer
 export declare type DecoderObject<Val, AltErr extends any> = {
     [Key in keyof Val]: ComposedDecoder<Val[Key], AltErr>;
 };
+export declare type NullableObject<Val> = {
+    [Key in keyof Val]: Val[Key] | null | undefined;
+};
+export declare type NullablePartial<Val> = Partial<NullableObject<Val>>;
 /**
  * Treats nullable fields as optional
  * https://github.com/Microsoft/TypeScript/issues/12400#issuecomment-758523767
@@ -148,7 +152,7 @@ export declare function inList<Union>(list: readonly Union[]): (val: any) => Res
 /**
  * Makes the child members of a composed decoder (i.e. `object()`) nullable.
  */
-export declare function partial<Val, AltErr>(decoder: Decoder<Val, AltErr>): Decoder<Val | null, AltErr>;
+export declare function partial<Val, AltErr>(decoder: Decoder<Val, AltErr>): Decoder<NullablePartial<Val> | null, AltErr>;
 /**
  * Takes a composed decoder and returns one that, if decoding fails,
  * collects all failures, rather than breaking on the first one.
