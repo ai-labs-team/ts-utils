@@ -21,6 +21,10 @@ type DecoderSpec<Val, Err, Args> = {
 
 export function extract<Val, Err>(decoder: ReturnType<typeof object>): DecoderSpec<Val, Err, [string, DecoderObject<Val, Err>]>;
 export function extract<Val, Err>(decoder: ReturnType<typeof dict>): DecoderSpec<Val, Err, [Decoder<Val, Err>]>;
+export function extract<Val, Err>(decoder: ReturnType<typeof dict>): DecoderSpec<Val, Err, [Decoder<Val, Err>]>;
+export function extract<Val, Err>(decoder: Partial<Pick<object, never>>): DecoderSpec<Val, Err, [string, DecoderObject<Val, Err>]>;
+export function extract<Val, Err>(decoder: OptionalNullable<object>): DecoderSpec<Val, Err, [string, DecoderObject<Val, Err>]>;
+export function extract<Val, Err>(decoder: { [key: string]: unknown; }): DecoderSpec<Val, Err, [string, DecoderObject<Val, Err>]>;
 export function extract<Val, Err>(decoder: unknown): DecoderSpec<unknown, unknown, unknown> {
   return (decoder as any)[defTag] ? (decoder as any)(defTag) : null;
 }
@@ -45,6 +49,21 @@ export type Decoded<Model, AltErr = never> = Model extends Decoder<infer Type, A
 export type DecoderObject<Val, AltErr extends any> = {
   [Key in keyof Val]: ComposedDecoder<Val[Key], AltErr>
 };
+
+export type NullableObject<Val> = {
+  [Key in keyof Val]: Val[Key] | null | undefined;
+};
+
+export type NullablePartial<Val> = Partial<NullableObject<Val>>;
+
+/**
+ * Treats nullable fields as optional
+ * https://github.com/Microsoft/TypeScript/issues/12400#issuecomment-758523767
+ */
+export type OptionalNullable<T> = Optional<T> & Required<T>;
+type Optional<T> = Partial<Pick<T, KeysOfType<T, null | undefined>>>;
+type Required<T> = Omit<T, KeysOfType<T, null | undefined>>;
+type KeysOfType<T, SelectedType> = { [key in keyof T]: SelectedType extends T[key] ? key : never }[keyof T];
 
 type PathElement = TypedObject | Index | ObjectKey | Array<any>;
 
@@ -207,10 +226,10 @@ export function oneOf<Val, AltErr = never>(decoders: ReadonlyArray<ComposedDecod
  * });
  * ```
  */
-export function object<Val, AltErr>(
+export function object<Val extends object, AltErr>(
   name: string,
   decoders: DecoderObject<Val, AltErr>,
-): Decoder<Val, AltErr> {
+): Decoder<OptionalNullable<Val>, AltErr> {
   return spec(object, [name, decoders], (json: any, [n, de], opts: any) => (
     (json === null || typeof json !== 'object')
       ? Result.err(new DecodeError(Object, json, new TypedObject(n)))
@@ -238,7 +257,7 @@ export function object<Val, AltErr>(
  * ) ==> object({ foo: string, bar: string })
  * ```
  */
-export function and<ValA, ErrA, ValB, ErrB>(
+export function and<ValA extends object, ErrA, ValB extends object, ErrB>(
   a: ComposedDecoder<ValA, ErrA>,
   b: ComposedDecoder<ValB, ErrB>,
 ): Decoder<ValA & ValB, ErrA | ErrB> {
@@ -280,7 +299,7 @@ export const lazy = <Val, AltErr = never>(wrapped: () => ComposedDecoder<Val, Al
 /**
  * Attempts to convert a raw JSON value to an enum type.
  */
-export function toEnum<Enum>(name: string, enumVal: Enum) {
+export function toEnum<Enum extends object>(name: string, enumVal: Enum) {
   return spec(toEnum, [name, enumVal], (val: any): Result<DecodeError, Enum[keyof Enum]> => {
     const key = Object.keys(enumVal)
       .find(key => enumVal[key as keyof Enum] === val) as keyof Enum | undefined;
