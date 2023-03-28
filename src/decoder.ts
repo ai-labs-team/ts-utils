@@ -21,6 +21,10 @@ type DecoderSpec<Val, Err, Args> = {
 
 export function extract<Val, Err>(decoder: ReturnType<typeof object>): DecoderSpec<Val, Err, [string, DecoderObject<Val, Err>]>;
 export function extract<Val, Err>(decoder: ReturnType<typeof dict>): DecoderSpec<Val, Err, [Decoder<Val, Err>]>;
+export function extract<Val, Err>(decoder: ReturnType<typeof dict>): DecoderSpec<Val, Err, [Decoder<Val, Err>]>;
+export function extract<Val, Err>(decoder: Partial<Pick<object, never>>): DecoderSpec<Val, Err, [string, DecoderObject<Val, Err>]>;
+export function extract<Val, Err>(decoder: OptionalNullable<object>): DecoderSpec<Val, Err, [string, DecoderObject<Val, Err>]>;
+export function extract<Val, Err>(decoder: { [key: string]: unknown; }): DecoderSpec<Val, Err, [string, DecoderObject<Val, Err>]>;
 export function extract<Val, Err>(decoder: unknown): DecoderSpec<unknown, unknown, unknown> {
   return (decoder as any)[defTag] ? (decoder as any)(defTag) : null;
 }
@@ -222,7 +226,7 @@ export function oneOf<Val, AltErr = never>(decoders: ReadonlyArray<ComposedDecod
  * });
  * ```
  */
-export function object<Val, AltErr>(
+export function object<Val extends object, AltErr>(
   name: string,
   decoders: DecoderObject<Val, AltErr>,
 ): Decoder<OptionalNullable<Val>, AltErr> {
@@ -253,7 +257,7 @@ export function object<Val, AltErr>(
  * ) ==> object({ foo: string, bar: string })
  * ```
  */
-export function and<ValA, ErrA, ValB, ErrB>(
+export function and<ValA extends object, ErrA, ValB extends object, ErrB>(
   a: ComposedDecoder<ValA, ErrA>,
   b: ComposedDecoder<ValB, ErrB>,
 ): Decoder<ValA & ValB, ErrA | ErrB> {
@@ -295,7 +299,7 @@ export const lazy = <Val, AltErr = never>(wrapped: () => ComposedDecoder<Val, Al
 /**
  * Attempts to convert a raw JSON value to an enum type.
  */
-export function toEnum<Enum>(name: string, enumVal: Enum) {
+export function toEnum<Enum extends object>(name: string, enumVal: Enum) {
   return spec(toEnum, [name, enumVal], (val: any): Result<DecodeError, Enum[keyof Enum]> => {
     const key = Object.keys(enumVal)
       .find(key => enumVal[key as keyof Enum] === val) as keyof Enum | undefined;
@@ -334,7 +338,9 @@ export function inList<Union>(list: readonly Union[]) {
 /**
  * Makes the child members of a composed decoder (i.e. `object()`) nullable.
  */
-export function partial<Val, AltErr>(decoder: Decoder<Val, AltErr>): Decoder<NullablePartial<Val> | null, AltErr> {
+export function partial<Val extends object, AltErr>(decoder: Decoder<Val, AltErr>):
+  Decoder<Partial<Val>, AltErr> {
+
   const { ctor, args } = extract(decoder);
 
   switch (ctor as any) {
@@ -342,22 +348,19 @@ export function partial<Val, AltErr>(decoder: Decoder<Val, AltErr>): Decoder<Nul
       return object(
         args[0],
         Object.keys(args[1]).map(key => ({ [key]: nullable((args[1] as any)[key]) })).reduce(assign)
-      ) as unknown as Decoder<NullablePartial<Val> | null, AltErr>;
-
-    case dict:
-      return dict(nullable(args[0] as any as ComposedDecoder<Val>)) as unknown as Decoder<NullablePartial<Val> | null, AltErr>;
+      ) as unknown as Decoder<Partial<Val>, AltErr>;
 
     case array:
-      return array(nullable(args[0] as any as ComposedDecoder<Val>)) as unknown as Decoder<NullablePartial<Val> | null, AltErr>;
+      return array(nullable((args[0] as any as ComposedDecoder<Val>))) as unknown as Decoder<Partial<Val>, AltErr>;
 
     case and:
       return and(
-        partial(args[0] as any as ComposedDecoder<Val>),
-        partial(args[1] as any as ComposedDecoder<Val>)
+        partial((args[0] as any as ComposedDecoder<Val>)),
+        partial((args[1] as any as ComposedDecoder<Val>)),
       );
 
     default:
-      return decoder;
+      return nullable(decoder) as any;
   }
 }
 
