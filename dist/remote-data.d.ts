@@ -20,10 +20,10 @@ declare abstract class RemoteDataAbstract<Val> {
     map<NewVal>(_: (val: Val) => NewVal): RemoteDataAbstract<NewVal>;
     toMaybe(): Maybe<Val>;
 }
-declare class DataNotLoaded<Val = unknown> extends RemoteDataAbstract<Val> {
+declare class DataNotLoaded<Val = any> extends RemoteDataAbstract<Val> {
     private toJSON;
 }
-declare class DataLoading<Val = unknown> extends RemoteDataAbstract<Val> {
+declare class DataLoading<Val = any> extends RemoteDataAbstract<Val> {
     private toJSON;
 }
 declare class DataLoaded<Val> extends RemoteDataAbstract<Val> {
@@ -34,7 +34,7 @@ declare class DataLoaded<Val> extends RemoteDataAbstract<Val> {
     toMaybe(): Maybe<Val>;
     private toJSON;
 }
-declare class DataFailed<Err> extends RemoteDataAbstract<unknown> {
+declare class DataFailed<Err> extends RemoteDataAbstract<any> {
     private [errorTag];
     constructor(error: Err);
     private toJSON;
@@ -52,7 +52,7 @@ export declare type RemoteData<Val, Err = any> = DataNotLoaded<Val> | DataLoadin
  * init: () => ({ accounts: RemoteData.NotLoaded })
  * ```
  */
-export declare const NotLoaded: DataNotLoaded<unknown>;
+export declare const NotLoaded: DataNotLoaded<any>;
 /**
  * Value type to assign when you start loading the data.
  *
@@ -65,7 +65,7 @@ export declare const NotLoaded: DataNotLoaded<unknown>;
  * ],
  * ```
  */
-export declare const Loading: DataLoading<unknown>;
+export declare const Loading: DataLoading<any>;
 /**
  * @example
  * ```
@@ -123,10 +123,7 @@ export declare type Keyed<Val, Err> = {
  * @param fn The mapping function—accepts a keyed object where the values are unwrapped data
  * @param rd An object of key/value pairs, where the values are `RemoteData`-wrapped values
  */
-export declare const mapKeys: {
-    <Val, NewVal, Err>(fn: (data: Val) => NewVal, data: Keyed<Val, Err>): Maybe<NewVal>;
-    <Val, NewVal, Err>(fn: (data: Val) => NewVal): (data: Keyed<Val, Err>) => Maybe<NewVal>;
-};
+export declare const mapKeys: <Val, NewVal, Err>(fn: (data: Val) => NewVal) => (data: Keyed<Val, Err>) => Maybe<unknown>;
 export declare const fromJSON: (val: any) => RemoteData<unknown>;
 export {};
 //# sourceMappingURL=remote-data.d.ts.map

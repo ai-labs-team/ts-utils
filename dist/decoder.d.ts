@@ -41,7 +41,7 @@ export declare class TypedObject {
  * Represents a failed decode operation.
  */
 export declare class DecodeError<AltErr = never> {
-    static nest<AltErr = never>(key: PathElement, val: any): (err: AltErr | DecodeError<AltErr>) => DecodeError<AltErr>;
+    static nest<AltErr = never>(key: PathElement, val: any): (err: DecodeError<AltErr> | AltErr) => DecodeError<AltErr>;
     expected: Error | Function | string;
     val: any;
     key: PathElement[];
@@ -60,7 +60,7 @@ export declare const number: Decoder<number>;
 export declare const bool: Decoder<boolean>;
 export declare const boolean: typeof bool;
 /**
- * Wraps a decoder to let it be `null` or unspecified. Optionally, you can specify a default
+ * Wraps a decoder to let it be `null` or `undefined`. Optionally, you can specify a default
  * value and/or a mapping function that will apply to values if they are specified. This makes
  * it possible to, for example, convert a nullable value to a `Maybe`:
  *
@@ -68,7 +68,7 @@ export declare const boolean: typeof bool;
  * nullable(string, Maybe.emptyOf<string>(), Maybe.of)
  * ```
  */
-export declare function nullable<Val, AltErr = never>(decoder: ComposedDecoder<Val, AltErr>): Decoder<Val | null, AltErr>;
+export declare function nullable<Val, AltErr = never>(decoder: ComposedDecoder<Val, AltErr>): Decoder<Val | null | undefined, AltErr>;
 export declare function nullable<Val, AltErr = never>(decoder: ComposedDecoder<Val, AltErr>, defaultVal: Val): Decoder<Val, AltErr>;
 export declare function nullable<Val, NewVal, AltErr = never>(decoder: Decoder<NewVal, AltErr>, defaultVal: Val, mapper: (a: NewVal) => Val): Decoder<Val, AltErr>;
 export declare function array<Val, AltErr = never>(elementDecoder: ComposedDecoder<Val>): Decoder<Val[], AltErr>;
@@ -99,7 +99,7 @@ export declare function object<Val, AltErr>(name: string, decoders: DecoderObjec
  * ) ==> object({ foo: string, bar: string })
  * ```
  */
-export declare function and<ValA, ErrA, ValB, ErrB>(a: ComposedDecoder<ValA, ErrA>, b: ComposedDecoder<ValB, ErrB>): (val: any) => Result<DecodeError<ErrA | ErrB>, ValA & ValB>;
+export declare function and<ValA, ErrA, ValB, ErrB>(a: ComposedDecoder<ValA, ErrA>, b: ComposedDecoder<ValB, ErrB>): Decoder<ValA & ValB, ErrA | ErrB>;
 /**
  * Decodes an arbitrary collection of key/value pairs. This is useful when
  * the structure or keys aren't known, and they'll be consumed or sanitized
@@ -138,7 +138,7 @@ export declare function inList<Union>(list: readonly Union[]): (val: any) => Res
 /**
  * Makes the child members of a composed decoder (i.e. `object()`) nullable.
  */
-export declare function partial<Val, AltErr>(decoder: Decoder<Val, AltErr>): Decoder<Val | null, AltErr>;
+export declare function partial<Val extends object, AltErr>(decoder: Decoder<Val, AltErr>): Decoder<Partial<Val>, AltErr>;
 /**
  * Takes a composed decoder and returns one that, if decoding fails,
  * collects all failures, rather than breaking on the first one.

@@ -142,7 +142,7 @@ export const bool: Decoder<boolean> = (json: any) => toDecodeResult<boolean>(typ
 export const boolean: typeof bool = bool;
 
 /**
- * Wraps a decoder to let it be `null` or unspecified. Optionally, you can specify a default
+ * Wraps a decoder to let it be `null` or `undefined`. Optionally, you can specify a default
  * value and/or a mapping function that will apply to values if they are specified. This makes
  * it possible to, for example, convert a nullable value to a `Maybe`:
  *
@@ -150,7 +150,7 @@ export const boolean: typeof bool = bool;
  * nullable(string, Maybe.emptyOf<string>(), Maybe.of)
  * ```
  */
-export function nullable<Val, AltErr = never>(decoder: ComposedDecoder<Val, AltErr>): Decoder<Val | null, AltErr>;
+export function nullable<Val, AltErr = never>(decoder: ComposedDecoder<Val, AltErr>): Decoder<Val | null | undefined, AltErr>;
 export function nullable<Val, AltErr = never>(decoder: ComposedDecoder<Val, AltErr>, defaultVal: Val): Decoder<Val, AltErr>;
 export function nullable<Val, NewVal, AltErr = never>(
   decoder: Decoder<NewVal, AltErr>,
@@ -161,7 +161,7 @@ export function nullable<Val, AltErr = never>(
   decoder: ComposedDecoder<Val, AltErr>,
   defaultVal?: Val,
   mapper?: (a: Val) => Val,
-): ComposedDecoder<Val | null, AltErr> {
+): ComposedDecoder<Val | null | undefined, AltErr> {
   return spec(nullable, [decoder, defaultVal, mapper], (json: any) => (
     (!isDefined(json) && isDefined(defaultVal))
       ? Result.ok<DecodeError<AltErr> | AltErr, Val>(defaultVal! as Val)
@@ -169,7 +169,7 @@ export function nullable<Val, AltErr = never>(
         ? decoder(json).map(mapper!)
         : isDefined(json)
           ? decoder(json)
-          : Result.ok<DecodeError<AltErr> | AltErr, Val | null>(null)
+          : Result.ok<DecodeError<AltErr> | AltErr, Val | null | undefined>(null)
   ));
 }
 
@@ -319,7 +319,9 @@ export function inList<Union>(list: readonly Union[]) {
 /**
  * Makes the child members of a composed decoder (i.e. `object()`) nullable.
  */
-export function partial<Val, AltErr>(decoder: Decoder<Val, AltErr>): Decoder<Val | null, AltErr> {
+export function partial<Val extends object, AltErr>(decoder: Decoder<Val, AltErr>):
+  Decoder<Partial<Val>, AltErr> {
+
   const { ctor, args } = extract(decoder);
 
   switch (ctor as any) {
@@ -327,22 +329,19 @@ export function partial<Val, AltErr>(decoder: Decoder<Val, AltErr>): Decoder<Val
       return object(
         args[0],
         Object.keys(args[1]).map(key => ({ [key]: nullable((args[1] as any)[key]) })).reduce(assign)
-      ) as unknown as Decoder<Val | null, AltErr>;
-
-    case dict:
-      return dict(nullable(args[0] as any as ComposedDecoder<Val>)) as unknown as Decoder<Val | null, AltErr>;
+      ) as unknown as Decoder<Partial<Val>, AltErr>;
 
     case array:
-      return array(nullable(args[0] as any as ComposedDecoder<Val>)) as unknown as Decoder<Val | null, AltErr>;
+      return array(nullable((args[0] as any as ComposedDecoder<Val>))) as unknown as Decoder<Partial<Val>, AltErr>;
 
     case and:
       return and(
-        partial(args[0] as any as ComposedDecoder<Val>),
-        partial(args[1] as any as ComposedDecoder<Val>)
+        partial((args[0] as any as ComposedDecoder<Val>)),
+        partial((args[1] as any as ComposedDecoder<Val>)),
       );
 
     default:
-      return decoder;
+      return nullable(decoder) as any;
   }
 }
 

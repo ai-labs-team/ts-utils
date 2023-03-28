@@ -35,12 +35,12 @@ abstract class RemoteDataAbstract<Val> {
   }
 }
 
-class DataNotLoaded<Val = unknown> extends RemoteDataAbstract<Val> {
+class DataNotLoaded<Val = any> extends RemoteDataAbstract<Val> {
   private toJSON() {
     return { state: 'notLoaded' };
   }
 }
-class DataLoading<Val = unknown> extends RemoteDataAbstract<Val> {
+class DataLoading<Val = any> extends RemoteDataAbstract<Val> {
   private toJSON() {
     return { state: 'loading' };
   }
@@ -71,7 +71,7 @@ class DataLoaded<Val> extends RemoteDataAbstract<Val> {
     return { state: 'loaded', data: this[valueTag] };
   }
 }
-class DataFailed<Err> extends RemoteDataAbstract<unknown> {
+class DataFailed<Err> extends RemoteDataAbstract<any> {
 
   private [errorTag]!: Err;
 
@@ -158,7 +158,7 @@ export const map = <Val, NewVal, Err>(fn: (d: Val) => NewVal) => (rd: RemoteData
 export const defaultTo: {
   <Val>(val: Val, rd: RemoteData<Val, any>): Val;
   <Val>(val: Val): (rd: RemoteData<Val, any>) => Val;
-} = curry(<Val>(val: Val, rd: RemoteData<Val, any>) => (rd.defaultTo(val)));
+} = <Val>(val: Val) => (rd: RemoteData<Val, any>) => (rd.defaultTo(val));
 
 export const toMaybe = <Val>(rd: RemoteData<Val>): Maybe<Val> => (
   rd instanceof DataLoaded ? Maybe.of(rd[valueTag]) : Maybe.empty
@@ -185,14 +185,11 @@ export type Keyed<Val, Err> = { [K in keyof Val]: RemoteData<Val[K], Err> };
  * @param fn The mapping function—accepts a keyed object where the values are unwrapped data
  * @param rd An object of key/value pairs, where the values are `RemoteData`-wrapped values
  */
-export const mapKeys: {
-  <Val, NewVal, Err>(fn: (data: Val) => NewVal, data: Keyed<Val, Err>): Maybe<NewVal>;
-  <Val, NewVal, Err>(fn: (data: Val) => NewVal): (data: Keyed<Val, Err>) => Maybe<NewVal>;
-} = curry(<Val, NewVal, Err>(fn: (data: Val) => NewVal, data: Keyed<Val, Err>) => (
+export const mapKeys = <Val, NewVal, Err>(fn: (data: Val) => NewVal) => (data: Keyed<Val, Err>) => (
   Maybe.all(Object.keys(data).map(key => data[key as keyof Val].toMaybe()))
     .map(zipObj(Object.keys(data)))
     .map(fn as any)
-)) as any;
+);
 
 export const fromJSON: (val: any) => RemoteData<unknown> = cond([
   [propEq('state', 'loading'), always(Loading)],

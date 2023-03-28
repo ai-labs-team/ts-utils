@@ -34,14 +34,19 @@ var Maybe = /** @class */ (function () {
     Maybe.prototype.orLazy = function (fn) {
         return this.isNothing() ? fn() : this;
     };
-    Maybe.map = ramda_1.curry(function (fn, maybe) { return maybe.map(fn); });
+    Maybe.prototype.filter = function (fn) {
+        return this.isNothing() ? Maybe.empty : fn(this.val) ? this : Maybe.empty;
+    };
+    Maybe.map = function (fn) { return function (maybe) { return maybe.map(fn); }; };
     Maybe.empty = Maybe.of(null);
-    Maybe.defaultToLazy = ramda_1.curry(function (fn, maybe) { return maybe.defaultToLazy(fn); });
-    Maybe.defaultTo = ramda_1.curry(function (val, maybe) { return maybe.defaultTo(val); });
-    Maybe.orLazy = ramda_1.curry(function (fn, maybe) { return maybe.orLazy(fn); });
-    Maybe.or = ramda_1.curry(function (val, maybe) { return maybe.or(val); });
+    Maybe.defaultToLazy = function (fn) { return function (maybe) { return maybe.defaultToLazy(fn); }; };
+    Maybe.defaultTo = function (val) { return function (maybe) { return maybe.defaultTo(val); }; };
+    Maybe.orLazy = function (fn) { return function (maybe) { return maybe.orLazy(fn); }; };
+    Maybe.or = function (val) { return function (maybe) { return maybe.or(val); }; };
     Maybe.isNothing = function (maybe) { return maybe.isNothing(); };
     Maybe.value = function (maybe) { return maybe.value(); };
+    Maybe.chain = function (fn) { return function (maybe) { return maybe.chain(fn); }; };
+    Maybe.filter = function (fn) { return function (maybe) { return maybe.filter(fn); }; };
     /**
      * Maps a `Array<Maybe<Val>>` into a `Maybe<Array<Val>>` _only_ if none of the array elements
      * is `Nothing`.

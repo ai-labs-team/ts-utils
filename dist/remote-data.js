@@ -17,7 +17,7 @@ var __extends = (this && this.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
             ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
         return extendStatics(d, b);
     };
     return function (d, b) {
@@ -30,6 +30,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.fromJSON = exports.mapKeys = exports.toMaybe = exports.defaultTo = exports.map = exports.Failed = exports.Loaded = exports.Loading = exports.NotLoaded = void 0;
 var ramda_1 = require("ramda");
 var maybe_1 = __importDefault(require("./maybe"));
 var valueTag = Symbol.for('@ts-utils/remote-data/value');
@@ -133,7 +134,8 @@ exports.Loading = new DataLoading();
  * })],
  * ```
  */
-exports.Loaded = function (data) { return new DataLoaded(data); };
+var Loaded = function (data) { return new DataLoaded(data); };
+exports.Loaded = Loaded;
 /**
  * Marks data that has failed to load.
  *
@@ -145,7 +147,8 @@ exports.Loaded = function (data) { return new DataLoaded(data); };
  * })],
  * ```
  */
-exports.Failed = function (error) { return new DataFailed(error); };
+var Failed = function (error) { return new DataFailed(error); };
+exports.Failed = Failed;
 /**
  * Transforms a `RemoteData` value in a `LOADED` or `RELOADING` state to a new value in
  * the same state. Returns values in other states unmodified.
@@ -154,9 +157,12 @@ exports.Failed = function (error) { return new DataFailed(error); };
  * @typeparam NewVal The value that `fn` will map to
  * @typeparam E The `Error` value of the passed `RemoteData` instance
  */
-exports.map = function (fn) { return function (rd) { return (rd.map(fn)); }; };
-exports.defaultTo = ramda_1.curry(function (val, rd) { return (rd.defaultTo(val)); });
-exports.toMaybe = function (rd) { return (rd instanceof DataLoaded ? maybe_1.default.of(rd[valueTag]) : maybe_1.default.empty); };
+var map = function (fn) { return function (rd) { return (rd.map(fn)); }; };
+exports.map = map;
+var defaultTo = function (val) { return function (rd) { return (rd.defaultTo(val)); }; };
+exports.defaultTo = defaultTo;
+var toMaybe = function (rd) { return (rd instanceof DataLoaded ? maybe_1.default.of(rd[valueTag]) : maybe_1.default.empty); };
+exports.toMaybe = toMaybe;
 /**
  * Accepts a mapping function, and an object where all values are `RemoteData`.
  * Executes the mapping function if all values have data, and returns the result as
@@ -169,9 +175,10 @@ exports.toMaybe = function (rd) { return (rd instanceof DataLoaded ? maybe_1.def
  * @param fn The mapping function—accepts a keyed object where the values are unwrapped data
  * @param rd An object of key/value pairs, where the values are `RemoteData`-wrapped values
  */
-exports.mapKeys = ramda_1.curry(function (fn, data) { return (maybe_1.default.all(Object.keys(data).map(function (key) { return data[key].toMaybe(); }))
+var mapKeys = function (fn) { return function (data) { return (maybe_1.default.all(Object.keys(data).map(function (key) { return data[key].toMaybe(); }))
     .map(ramda_1.zipObj(Object.keys(data)))
-    .map(fn)); });
+    .map(fn)); }; };
+exports.mapKeys = mapKeys;
 exports.fromJSON = ramda_1.cond([
     [ramda_1.propEq('state', 'loading'), ramda_1.always(exports.Loading)],
     [ramda_1.propEq('state', 'loaded'), function (_a) {

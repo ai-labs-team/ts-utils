@@ -1,22 +1,26 @@
-import { any, complement, anyPass, curry, ifElse, isEmpty, isNil, map, pipe, all } from 'ramda';
+import { any, complement, anyPass, ifElse, isEmpty, isNil, map, pipe, all } from 'ramda';
 
 export default class Maybe<Val> {
 
-  public static map = curry(<T, U>(fn: (val: T) => U, maybe: Maybe<T>) => maybe.map(fn));
+  public static map = <T, U>(fn: (val: T) => U) => (maybe: Maybe<T>) => maybe.map(fn);
 
   public static empty = Maybe.of<any>(null);
 
-  public static defaultToLazy = curry(<Val>(fn: () => Val, maybe: Maybe<Val>) => maybe.defaultToLazy(fn));
+  public static defaultToLazy = <Val>(fn: () => Val) => (maybe: Maybe<Val>) => maybe.defaultToLazy(fn);
 
-  public static defaultTo = curry(<Val>(val: Val, maybe: Maybe<Val>) => maybe.defaultTo(val));
+  public static defaultTo = <Val>(val: Val) => (maybe: Maybe<Val>) => maybe.defaultTo(val);
 
-  public static orLazy = curry(<Val>(fn: () => Maybe<Val>, maybe: Maybe<Val>) => maybe.orLazy(fn));
+  public static orLazy = <Val>(fn: () => Maybe<Val>) => (maybe: Maybe<Val>) => maybe.orLazy(fn);
 
-  public static or = curry(<Val>(val: Maybe<Val>, maybe: Maybe<Val>) => maybe.or(val));
+  public static or = <Val>(val: Maybe<Val>) => (maybe: Maybe<Val>) => maybe.or(val);
 
   public static isNothing = <Val>(maybe: Maybe<Val>) => maybe.isNothing();
 
   public static value = <Val>(maybe: Maybe<Val>) => maybe.value();
+
+  public static chain = <T, U>(fn: (val: T) => Maybe<U>) => (maybe: Maybe<T>): Maybe<U> => maybe.chain(fn);
+
+  public static filter = <T>(fn: (val: T) => boolean) => (maybe: Maybe<T>): Maybe<T> => maybe.filter(fn);
 
   public static of<Val>(val: Val | null | undefined): Maybe<Val> {
     return val === undefined || (val === null && Maybe.empty)
@@ -90,5 +94,9 @@ export default class Maybe<Val> {
 
   public orLazy(fn: () => Maybe<Val>): Maybe<Val> {
     return this.isNothing() ? fn() : this;
+  }
+
+  public filter(fn: (val: Val) => boolean): Maybe<Val> {
+    return this.isNothing() ? Maybe.empty : fn(this.val) ? this : Maybe.empty;
   }
 }

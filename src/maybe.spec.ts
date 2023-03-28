@@ -17,7 +17,7 @@ describe('Maybe', () => {
   describe('defaultTo', () => {
     it('uses default values when empty', () => {
       expect((new Maybe<number>(null)).defaultTo(1)).to.equal(1);
-      expect(pipe(Maybe.of, Maybe.defaultTo(1))(null)).to.equal(1);
+      expect(pipe<any, any, any>(Maybe.of, Maybe.defaultTo(1))(null)).to.equal(1);
     });
   });
 
@@ -78,6 +78,24 @@ describe('Maybe', () => {
       it('mimics spec 3', () => {
         expect(Maybe.of(['foo', 'bar', 'baz']).chain(ofHead)).to.deep.eq(Maybe.of('foo'));
       });
+    });
+  });
+
+  describe('filter', () => {
+    /**
+     * @link https://github.com/sanctuary-js/sanctuary-maybe#maybefantasy-landfilter--maybeaa-boolean---maybea
+     */
+
+    it('mimics spec 1', () => {
+      expect(Maybe.empty.filter(isFinite)).to.deep.eq(Maybe.empty);
+    });
+
+    it('mimics spec 2', () => {
+      expect(Maybe.of(Infinity).filter(isFinite)).to.deep.eq(Maybe.empty);
+    });
+
+    it('mimics spec 3', () => {
+      expect(Maybe.of(Number.MAX_SAFE_INTEGER).filter(isFinite)).to.deep.eq(Maybe.of(9007199254740991));
     });
   });
 });
